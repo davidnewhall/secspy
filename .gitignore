@@ -2,6 +2,7 @@
 /secspy
 *.exe
 *.exe~
+*.gz
 
 # Test binary, build with `go test -c`
 *.test
