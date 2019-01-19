@@ -51,6 +51,7 @@ func main() {
 	}
 }
 
+// Turn CLI flags into a config struct.
 func parseFlags() *Config {
 	config := &Config{}
 	flg.Usage = func() {
@@ -71,7 +72,7 @@ func parseFlags() *Config {
 	return config
 }
 
-// getServer makes and returns a handle.
+// getServer makes, saves and returns a securitypy handle.
 func (c *Config) getServer() securityspy.Server {
 	var err error
 	if c.Server, err = securityspy.GetServer(c.User, c.Pass, c.URL, c.UseSSL); err != nil {
@@ -87,8 +88,8 @@ func (c *Config) getServer() securityspy.Server {
 func (c *Config) triggerMotion() {
 	if c.Arg == "" {
 		fmt.Println("Triggers motion on a camera.")
-		fmt.Println("Supply a camera name with -a <cam>")
-		fmt.Println("Example: secspy -c trigger -a Door")
+		fmt.Println("Supply a camera name with -a <cam>[,<cam>][,<cam>]")
+		fmt.Println("Example: secspy -c trigger -a Door,Gate")
 		fmt.Println("See camera names with -c cams")
 		os.Exit(1)
 	}
@@ -96,15 +97,16 @@ func (c *Config) triggerMotion() {
 	for _, arg := range strings.Split(c.Arg, ",") {
 		if cam := srv.GetCameraByName(arg); cam == nil {
 			fmt.Println("Camera does not exist:", arg)
-			os.Exit(1)
+			continue
 		} else if err := cam.TriggerMotion(); err != nil {
-			fmt.Printf("Error Trigger Motion for camera '%v': %v", arg, err)
-			os.Exit(1)
+			fmt.Printf("Error Triggering Motion for camera '%v': %v", arg, err)
+			continue
 		}
 		fmt.Println("Triggered Motion for Camera:", arg)
 	}
 }
 
+// showEvents is a callback function fired by the event watcher in securityspy library.
 func (c *Config) showEvents(e securityspy.Event) {
 	camString := "No Camera"
 	if e.Camera != nil {
@@ -116,6 +118,7 @@ func (c *Config) showEvents(e securityspy.Event) {
 		e.When, e.ID, e.Event.Event(), camString, e.Msg)
 }
 
+// printCamData formats camera data onto a screen for an operator.
 func (c *Config) printCamData() {
 	for _, camera := range c.getServer().GetCameras() {
 		cam := camera.Device()
