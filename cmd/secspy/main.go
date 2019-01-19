@@ -4,8 +4,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,7 +18,7 @@ import (
 // Version of the app
 var Version = "1.0.0"
 
-// Config from CLI + securityspy.Server.
+// Config represents the CLI args + securityspy.Server.
 type Config struct {
 	UseSSL bool
 	User   string
@@ -44,6 +46,10 @@ func main() {
 		config.savePicture()
 	case "trigger", "t":
 		config.triggerMotion()
+	case "files", "file", "f":
+		config.showFiles()
+	case "download", "d":
+		config.downloadFile()
 	default:
 		_, _ = fmt.Fprintln(os.Stderr, "invalid command:", config.Cmd)
 		flg.Usage()
@@ -62,7 +68,7 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Pass, "pass", "p", os.Getenv("SECSPY_PASSWORD"), "Password to authenticate with")
 	flg.StringVarP(&config.URL, "url", "U", "http://127.0.0.1:8000", "SecuritySpy URL")
 	flg.BoolVarP(&config.UseSSL, "verify-ssl", "s", false, "Validate SSL certificate if using https")
-	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events, cams, pic, vid, trigger")
+	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events, cams, pic, vid, trigger, files, download")
 	flg.StringVarP(&config.Arg, "arg", "a", "", "if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
@@ -168,4 +174,83 @@ func (c *Config) saveVideo() {
 		log.Fatalf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
 	}
 	fmt.Printf("10 Second video for camera '%v' saved to: %v\n", cam.Name(), split[1])
+}
+
+func (c *Config) showFiles() {
+	if c.Arg == "" {
+		fmt.Println("Shows last files captured by securityspy")
+		fmt.Println("Supply camera names and file age with -a <cam>,<cam>:<days old>")
+		fmt.Println("Example: secspy -c files -a Porch,Gate:10")
+		fmt.Println("See camera names with -c cams")
+		os.Exit(1)
+	}
+	split := strings.Split(c.Arg, ":")
+	daysOld := 14
+	if len(split) > 1 {
+		daysOld, _ = strconv.Atoi(split[1])
+		if daysOld < 1 {
+			daysOld = 14
+		}
+	}
+	srv := c.getServer()
+	var cameraNums []int
+	// Loop the provided camera names and find their numbers.
+	for _, name := range strings.Split(split[0], ",") {
+		cam := srv.GetCameraByName(name)
+		if cam == nil {
+			fmt.Println("Camera does not exist:", name)
+			continue
+		}
+		cameraNums = append(cameraNums, cam.Number())
+	}
+	age := time.Now().Add(-time.Duration(daysOld*24) * time.Hour)
+	files, err := srv.Files().GetAll(cameraNums, age, time.Now())
+	if err != nil {
+		fmt.Println("Received error from Files.GetAll() method:", err)
+	}
+	fmt.Printf("Found %d files. From %v to %v:\n", len(files), age.Format("01/02/2006"), time.Now().Format("01/02/2006"))
+	for _, file := range files {
+		camName := "<no camera>"
+		if file.Camera() != nil {
+			camName = file.Camera().Name()
+		}
+		fmt.Printf("[%v] %v %v: '%v' (%vMB)\n",
+			file.Date(), camName, file.Type(), file.Name(), file.Size()/1024/1024)
+	}
+}
+
+func (c *Config) downloadFile() {
+	if c.Arg == "" || !strings.Contains(c.Arg, ":") {
+		fmt.Println("Downloads a saved media file from SecuritySpy.")
+		fmt.Println("Supply file name and save-path with -a 'filename:path'")
+		fmt.Println("Example: secspy -c download -a '01-19-2019 00-01-23 M Porch.m4v:/tmp/file.m4v'")
+		fmt.Println("See file names with -c files")
+		os.Exit(1)
+	}
+
+	srv := c.getServer()
+	fileName := strings.Split(c.Arg, ":")[0]
+	savePath := strings.Split(c.Arg, ":")[1]
+	if _, err := os.Stat(savePath); !os.IsNotExist(err) {
+		log.Fatalln("File already exists:", savePath)
+	}
+	outFile, err := os.Create(savePath)
+	if err != nil {
+		log.Fatalln("Error creating file:", err)
+	}
+	defer func() {
+		_ = outFile.Close()
+	}()
+	body, err := srv.Files().GetFile(fileName)
+	if err != nil {
+		log.Fatalln("Error getting file:", err)
+	}
+	defer func() {
+		_ = body.Close()
+	}()
+	size, err := io.Copy(outFile, body)
+	if err != nil {
+		log.Fatalln("Error writing file:", err)
+	}
+	fmt.Println("File saved to:", savePath, "->", size/1024/1024, "MB")
 }

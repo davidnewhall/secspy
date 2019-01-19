@@ -8,7 +8,7 @@
     ".",
     "ffmpegencode"
   ]
-  revision = "feb0c853baa181ab6c62df78dcf5c9bb44ed8170"
+  revision = "381ebe378e89eb8cdd6e11e97654ec567f9df456"
 
 [[projects]]
   name = "github.com/pkg/errors"
