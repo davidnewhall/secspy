@@ -3,6 +3,7 @@ package main
 /* This is just a test app to demonstrate basic usage of the securityspy library. */
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -74,6 +75,8 @@ func main() {
 		config.showFiles()
 	case "download", "d":
 		config.downloadFile()
+	case "ptz", "z":
+		config.controlPTZ()
 	default:
 		_, _ = fmt.Fprintln(os.Stderr, "invalid command:", config.Cmd)
 		flg.Usage()
@@ -92,7 +95,7 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Pass, "pass", "p", os.Getenv("SECSPY_PASSWORD"), "Password to authenticate with")
 	flg.StringVarP(&config.URL, "url", "U", "http://127.0.0.1:8000", "SecuritySpy URL")
 	flg.BoolVarP(&config.UseSSL, "verify-ssl", "s", false, "Validate SSL certificate if using https")
-	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download")
+	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download, ptz")
 	flg.StringVarP(&config.Arg, "arg", "a", "", "if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
@@ -111,7 +114,7 @@ func (c *Config) getServer() *securityspy.Server {
 	}
 	fmt.Printf("%v %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
 		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.IP1,
-		c.Server.Info.HTTPPort, len(c.Server.Cameras.All()),
+		c.Server.Info.HTTPPort, c.Server.Cameras.Count,
 		len(c.Server.Info.Scripts.Names), len(c.Server.Info.Sounds.Names))
 	return c.Server
 }
@@ -142,7 +145,7 @@ func (c *Config) showEvent(e securityspy.Event) {
 	camString := "No Camera"
 	// Always check Camera interface for nil.
 	if e.Camera != nil {
-		camString = "Camera " + e.Camera.Num() + ": " + e.Camera.Name()
+		camString = "Camera " + strconv.Itoa(e.Camera.Number) + ": " + e.Camera.Name
 	} else if e.ID < 0 {
 		camString = "SecuritySpy Server"
 	}
@@ -153,14 +156,13 @@ func (c *Config) showEvent(e securityspy.Event) {
 // printCamData formats camera data onto a screen for an operator.
 func (c *Config) printCamData() {
 	for _, camera := range c.getServer().Cameras.All() {
-		cam := camera.Device()
-		fmt.Printf("%2v: %-14v (%-9v %5v/%-7v %v) connected: %3v, down %v, modes: C:%-8v M:%-8v A:%-8v "+
+		fmt.Printf("%2v: %-14v (%-4vx%-4v %5v/%-7v %v) connected: %3v, down %v, modes: C:%-8v M:%-8v A:%-8v "+
 			"%2vFPS, Audio:%3v, MD: %3v/pre:%v/post:%3v idle %-10v Script: %v (reset %v)\n",
-			camera.Num(), cam.Name, camera.Size(), cam.DeviceName, cam.DeviceType, cam.Address,
-			cam.Connected.Val, cam.TimeSinceLastFrame.Dur.String(), cam.ModeC.Txt, cam.ModeM.Txt,
-			cam.ModeA.Txt+",", int(cam.CurrentFPS), cam.HasAudio.Txt, cam.MDenabled.Txt,
-			cam.MDpreCapture.Dur.String(), cam.MDpostCapture.Dur.String(),
-			cam.TimeSinceLastMotion.Dur.String(), cam.ActionScriptName, cam.ActionResetTime.Dur.String())
+			camera.Number, camera.Name, camera.Width, camera.Height, camera.DeviceName, camera.DeviceType, camera.Address,
+			camera.Connected.Val, camera.TimeSinceLastFrame.Dur.String(), camera.ModeC.Txt, camera.ModeM.Txt,
+			camera.ModeA.Txt+",", int(camera.CurrentFPS), camera.HasAudio.Txt, camera.MDenabled.Txt,
+			camera.MDpreCapture.Dur.String(), camera.MDpostCapture.Dur.String(),
+			camera.TimeSinceLastMotion.Dur.String(), camera.ActionScriptName, camera.ActionResetTime.Dur.String())
 	}
 }
 
@@ -178,10 +180,10 @@ func (c *Config) savePicture() {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
 	} else if err := cam.SaveJPEG(&securityspy.VidOps{}, split[1]); err != nil {
-		fmt.Printf("Error Saving Image for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		fmt.Printf("Error Saving Image for camera '%v' to file '%v': %v\n", cam.Name, split[1], err)
 		os.Exit(1)
 	}
-	fmt.Printf("Image for camera '%v' saved to: %v\n", cam.Name(), split[1])
+	fmt.Printf("Image for camera '%v' saved to: %v\n", cam.Name, split[1])
 }
 
 func (c *Config) saveVideo() {
@@ -198,10 +200,10 @@ func (c *Config) saveVideo() {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
 	} else if err := cam.SaveVideo(&securityspy.VidOps{}, 10*time.Second, 9999999999, split[1]); err != nil {
-		fmt.Printf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		fmt.Printf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name, split[1], err)
 		os.Exit(1)
 	}
-	fmt.Printf("10 Second video for camera '%v' saved to: %v\n", cam.Name(), split[1])
+	fmt.Printf("10 Second video for camera '%v' saved to: %v\n", cam.Name, split[1])
 }
 
 func (c *Config) showFiles() {
@@ -229,7 +231,7 @@ func (c *Config) showFiles() {
 			fmt.Println("Camera does not exist:", name)
 			continue
 		}
-		cameraNums = append(cameraNums, cam.Number())
+		cameraNums = append(cameraNums, cam.Number)
 	}
 	age := time.Now().Add(-time.Duration(daysOld*24) * time.Hour)
 	files, err := srv.Files.GetAll(cameraNums, age, time.Now())
@@ -239,11 +241,11 @@ func (c *Config) showFiles() {
 	fmt.Printf("Found %d files. From %v to %v:\n", len(files), age.Format("01/02/2006"), time.Now().Format("01/02/2006"))
 	for _, file := range files {
 		camName := "<no camera>"
-		if file.Camera() != nil {
-			camName = file.Camera().Name()
+		if file.Camera != nil {
+			camName = file.Camera.Name
 		}
 		fmt.Printf("[%v] %v %v: '%v' (%vMB)\n",
-			file.Date(), camName, file.Type(), file.Name(), file.Size()/1024/1024)
+			file.Updated, camName, file.Link.Type, file.Title, file.Link.Length/1024/1024)
 	}
 }
 
@@ -274,4 +276,62 @@ func (c *Config) downloadFile() {
 		os.Exit(1)
 	}
 	fmt.Println("File saved to:", savePath, "->", size/1024/1024, "MB")
+}
+
+func (c *Config) controlPTZ() {
+	if c.Arg == "" || !strings.Contains(c.Arg, ":") {
+		fmt.Println("Controls Camera PTZ.")
+		fmt.Println("Supply the Camera and action with -a 'Camera:action'")
+		fmt.Println("Example: secspy -c z -a 'Door Cam:Home'")
+		fmt.Println("Actions: Home, Up, Down, Left, Right, In, Out, Preset1 .. Preset8")
+		os.Exit(1)
+	}
+	srv := c.getServer()
+	splitStr := strings.Split(c.Arg, ":")
+	command := strings.ToLower(splitStr[1])
+	camera := srv.Cameras.ByName(splitStr[0])
+	if camera == nil {
+		fmt.Println("camera not found:", splitStr[0])
+		os.Exit(1)
+	}
+	var err error
+	switch command {
+	case "home":
+		err = camera.PTZ.Home()
+	case "up":
+		err = camera.PTZ.Up()
+	case "down":
+		err = camera.PTZ.Down()
+	case "left":
+		err = camera.PTZ.Left()
+	case "right":
+		err = camera.PTZ.Right()
+	case "in":
+		err = camera.PTZ.Zoom(true)
+	case "out":
+		err = camera.PTZ.Zoom(false)
+	case "preset1":
+		err = camera.PTZ.Preset(securityspy.PTZpreset1)
+	case "preset2":
+		err = camera.PTZ.Preset(securityspy.PTZpreset2)
+	case "preset3":
+		err = camera.PTZ.Preset(securityspy.PTZpreset3)
+	case "preset4":
+		err = camera.PTZ.Preset(securityspy.PTZpreset4)
+	case "preset5":
+		err = camera.PTZ.Preset(securityspy.PTZpreset5)
+	case "preset6":
+		err = camera.PTZ.Preset(securityspy.PTZpreset6)
+	case "preset7":
+		err = camera.PTZ.Preset(securityspy.PTZpreset7)
+	case "preset8":
+		err = camera.PTZ.Preset(securityspy.PTZpreset8)
+	default:
+		err = errors.New("invalid command: " + command)
+	}
+	if err != nil {
+		fmt.Println("ptz error:", err)
+		os.Exit(1)
+	}
+	fmt.Println(command, "command sent to", camera.Name)
 }

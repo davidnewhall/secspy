@@ -35,6 +35,7 @@ secspy(1) -- Utility to gather data, image, events and videos from SecuritySpy
         c|cameras  - List all cameras and data
         f|files    - Show saved media files for a camera
         d|download - Downloads a saved media file
+        z|ptz      - Controls a PTZ camera
 
     -a, --arg <arg>
         Some commands require an argument. Use this to provide the arg.
