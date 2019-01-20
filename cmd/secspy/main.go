@@ -24,7 +24,7 @@ type Config struct {
 	URL    string
 	Cmd    string
 	Arg    string
-	Server securityspy.Server
+	Server *securityspy.Server
 }
 
 func main() {
@@ -38,17 +38,17 @@ func main() {
 		config.getServer()
 		fmt.Println("Watching Event Stream (specific events, until disconnect)")
 		channel := make(chan securityspy.Event)
-		config.Server.Events().BindChan(securityspy.EventStreamDisconnect, channel)
-		config.Server.Events().BindChan(securityspy.EventStreamConnect, channel)
-		config.Server.Events().BindChan(securityspy.EventMotionDetected, channel)
-		config.Server.Events().BindChan(securityspy.EventOnline, channel)
-		config.Server.Events().BindChan(securityspy.EventOffline, channel)
-		go config.Server.Events().Watch(10*time.Second, true)
+		config.Server.Events.BindChan(securityspy.EventStreamDisconnect, channel)
+		config.Server.Events.BindChan(securityspy.EventStreamConnect, channel)
+		config.Server.Events.BindChan(securityspy.EventMotionDetected, channel)
+		config.Server.Events.BindChan(securityspy.EventOnline, channel)
+		config.Server.Events.BindChan(securityspy.EventOffline, channel)
+		go config.Server.Events.Watch(10*time.Second, true)
 		for event := range channel {
 			config.showEvent(event)
 			if event.Event == securityspy.EventStreamDisconnect {
-				config.Server.Events().UnbindAll()
-				config.Server.Events().Stop()
+				config.Server.Events.UnbindAll()
+				config.Server.Events.Stop()
 				fmt.Println("Got disconnect, bailing out.")
 				os.Exit(1)
 			}
@@ -59,8 +59,8 @@ func main() {
 	case "callbacks", "callback", "call", "l":
 		config.getServer()
 		fmt.Println("Watching Event Stream (all events, forever)")
-		config.Server.Events().BindFunc(securityspy.EventAllEvents, config.showEvent)
-		config.Server.Events().Watch(10*time.Second, true)
+		config.Server.Events.BindFunc(securityspy.EventAllEvents, config.showEvent)
+		config.Server.Events.Watch(10*time.Second, true)
 
 	case "cameras", "cams", "cam", "c":
 		config.printCamData()
@@ -103,16 +103,16 @@ func parseFlags() *Config {
 }
 
 // getServer makes, saves and returns a securitypy handle.
-func (c *Config) getServer() securityspy.Server {
+func (c *Config) getServer() *securityspy.Server {
 	var err error
 	if c.Server, err = securityspy.GetServer(c.User, c.Pass, c.URL, c.UseSSL); err != nil {
 		fmt.Println("SecuritySpy Error:", err)
 		os.Exit(1)
 	}
 	fmt.Printf("%v %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
-		c.Server.Info().Name, c.Server.Info().Version, c.Server.Info().IP1,
-		c.Server.Info().HTTPPort, len(c.Server.GetCameras()),
-		len(c.Server.Info().Scripts.Names), len(c.Server.Info().Sounds.Names))
+		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.IP1,
+		c.Server.Info.HTTPPort, len(c.Server.Cameras.All()),
+		len(c.Server.Info.Scripts.Names), len(c.Server.Info.Sounds.Names))
 	return c.Server
 }
 
@@ -126,7 +126,7 @@ func (c *Config) triggerMotion() {
 	}
 	srv := c.getServer()
 	for _, arg := range strings.Split(c.Arg, ",") {
-		if cam := srv.GetCameraByName(arg); cam == nil {
+		if cam := srv.Cameras.ByName(arg); cam == nil {
 			fmt.Println("Camera does not exist:", arg)
 			continue
 		} else if err := cam.TriggerMotion(); err != nil {
@@ -152,7 +152,7 @@ func (c *Config) showEvent(e securityspy.Event) {
 
 // printCamData formats camera data onto a screen for an operator.
 func (c *Config) printCamData() {
-	for _, camera := range c.getServer().GetCameras() {
+	for _, camera := range c.getServer().Cameras.All() {
 		cam := camera.Device()
 		fmt.Printf("%2v: %-14v (%-9v %5v/%-7v %v) connected: %3v, down %v, modes: C:%-8v M:%-8v A:%-8v "+
 			"%2vFPS, Audio:%3v, MD: %3v/pre:%v/post:%3v idle %-10v Script: %v (reset %v)\n",
@@ -173,7 +173,7 @@ func (c *Config) savePicture() {
 		os.Exit(1)
 	}
 	split := strings.Split(c.Arg, ":")
-	cam := c.getServer().GetCameraByName(split[0])
+	cam := c.getServer().Cameras.ByName(split[0])
 	if cam == nil {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
@@ -193,7 +193,7 @@ func (c *Config) saveVideo() {
 		os.Exit(1)
 	}
 	split := strings.Split(c.Arg, ":")
-	cam := c.getServer().GetCameraByName(split[0])
+	cam := c.getServer().Cameras.ByName(split[0])
 	if cam == nil {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
@@ -224,7 +224,7 @@ func (c *Config) showFiles() {
 	var cameraNums []int
 	// Loop the provided camera names and find their numbers.
 	for _, name := range strings.Split(split[0], ",") {
-		cam := srv.GetCameraByName(name)
+		cam := srv.Cameras.ByName(name)
 		if cam == nil {
 			fmt.Println("Camera does not exist:", name)
 			continue
@@ -232,9 +232,9 @@ func (c *Config) showFiles() {
 		cameraNums = append(cameraNums, cam.Number())
 	}
 	age := time.Now().Add(-time.Duration(daysOld*24) * time.Hour)
-	files, err := srv.Files().GetAll(cameraNums, age, time.Now())
+	files, err := srv.Files.GetAll(cameraNums, age, time.Now())
 	if err != nil {
-		fmt.Println("Received error from Files.GetAll() method:", err)
+		fmt.Println("Received error from Files.All() method:", err)
 	}
 	fmt.Printf("Found %d files. From %v to %v:\n", len(files), age.Format("01/02/2006"), time.Now().Format("01/02/2006"))
 	for _, file := range files {
@@ -263,7 +263,7 @@ func (c *Config) downloadFile() {
 		fmt.Println("File already exists:", savePath)
 		os.Exit(1)
 	}
-	file, err := srv.Files().GetFile(fileName)
+	file, err := srv.Files.GetFile(fileName)
 	if err != nil {
 		fmt.Println("Error getting file:", err)
 		os.Exit(1)
