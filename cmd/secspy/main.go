@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -32,11 +31,37 @@ func main() {
 	config := parseFlags()
 	securityspy.Encoder = "/usr/local/bin/ffmpeg"
 	switch config.Cmd {
+
+	// Demonstrates event channels. Events always happen in order.
+	// Do not block the channel or things stop working.
 	case "events", "event", "e":
 		config.getServer()
-		log.Println("Watching Event Stream")
-		config.Server.BindEvent(securityspy.EventAllEvents, config.showEvents)
-		config.Server.WatchEvents(10*time.Second, true)
+		fmt.Println("Watching Event Stream (specific events, until disconnect)")
+		channel := make(chan securityspy.Event)
+		config.Server.Events().BindChan(securityspy.EventStreamDisconnect, channel)
+		config.Server.Events().BindChan(securityspy.EventStreamConnect, channel)
+		config.Server.Events().BindChan(securityspy.EventMotionDetected, channel)
+		config.Server.Events().BindChan(securityspy.EventOnline, channel)
+		config.Server.Events().BindChan(securityspy.EventOffline, channel)
+		go config.Server.Events().Watch(10*time.Second, true)
+		for event := range channel {
+			config.showEvent(event)
+			if event.Event == securityspy.EventStreamDisconnect {
+				config.Server.Events().UnbindAll()
+				config.Server.Events().Stop()
+				fmt.Println("Got disconnect, bailing out.")
+				os.Exit(1)
+			}
+		}
+
+		// Demonstrates event callbacks. Sometimes they fire out of order.
+		// They happen in a go routine, so they can be blocking operations.
+	case "callbacks", "callback", "call", "l":
+		config.getServer()
+		fmt.Println("Watching Event Stream (all events, forever)")
+		config.Server.Events().BindFunc(securityspy.EventAllEvents, config.showEvent)
+		config.Server.Events().Watch(10*time.Second, true)
+
 	case "cameras", "cams", "cam", "c":
 		config.printCamData()
 	case "video", "vid", "v":
@@ -67,7 +92,7 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Pass, "pass", "p", os.Getenv("SECSPY_PASSWORD"), "Password to authenticate with")
 	flg.StringVarP(&config.URL, "url", "U", "http://127.0.0.1:8000", "SecuritySpy URL")
 	flg.BoolVarP(&config.UseSSL, "verify-ssl", "s", false, "Validate SSL certificate if using https")
-	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events, cams, pic, vid, trigger, files, download")
+	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download")
 	flg.StringVarP(&config.Arg, "arg", "a", "", "if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
@@ -81,7 +106,8 @@ func parseFlags() *Config {
 func (c *Config) getServer() securityspy.Server {
 	var err error
 	if c.Server, err = securityspy.GetServer(c.User, c.Pass, c.URL, c.UseSSL); err != nil {
-		log.Fatalln("SecuritySpy Error:", err)
+		fmt.Println("SecuritySpy Error:", err)
+		os.Exit(1)
 	}
 	fmt.Printf("%v %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
 		c.Server.Info().Name, c.Server.Info().Version, c.Server.Info().IP1,
@@ -111,9 +137,10 @@ func (c *Config) triggerMotion() {
 	}
 }
 
-// showEvents is a callback function fired by the event watcher in securityspy library.
-func (c *Config) showEvents(e securityspy.Event) {
+// showEvent is a callback function fired by the event watcher in securityspy library.
+func (c *Config) showEvent(e securityspy.Event) {
 	camString := "No Camera"
+	// Always check Camera interface for nil.
 	if e.Camera != nil {
 		camString = "Camera " + e.Camera.Num() + ": " + e.Camera.Name()
 	} else if e.ID < 0 {
@@ -151,7 +178,8 @@ func (c *Config) savePicture() {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
 	} else if err := cam.SaveJPEG(&securityspy.VidOps{}, split[1]); err != nil {
-		log.Fatalf("Error Saving Image for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		fmt.Printf("Error Saving Image for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		os.Exit(1)
 	}
 	fmt.Printf("Image for camera '%v' saved to: %v\n", cam.Name(), split[1])
 }
@@ -170,7 +198,8 @@ func (c *Config) saveVideo() {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
 	} else if err := cam.SaveVideo(&securityspy.VidOps{}, 10*time.Second, 9999999999, split[1]); err != nil {
-		log.Fatalf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		fmt.Printf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name(), split[1], err)
+		os.Exit(1)
 	}
 	fmt.Printf("10 Second video for camera '%v' saved to: %v\n", cam.Name(), split[1])
 }
@@ -231,15 +260,18 @@ func (c *Config) downloadFile() {
 	fileName := strings.Split(c.Arg, ":")[0]
 	savePath := strings.Split(c.Arg, ":")[1]
 	if _, err := os.Stat(savePath); !os.IsNotExist(err) {
-		log.Fatalln("File already exists:", savePath)
+		fmt.Println("File already exists:", savePath)
+		os.Exit(1)
 	}
 	file, err := srv.Files().GetFile(fileName)
 	if err != nil {
-		log.Fatalln("Error getting file:", err)
+		fmt.Println("Error getting file:", err)
+		os.Exit(1)
 	}
 	size, err := file.Save(savePath)
 	if err != nil {
-		log.Fatalln("Error writing file:", err)
+		fmt.Println("Error writing file:", err)
+		os.Exit(1)
 	}
 	fmt.Println("File saved to:", savePath, "->", size/1024/1024, "MB")
 }

@@ -27,7 +27,8 @@ secspy(1) -- Utility to gather data, image, events and videos from SecuritySpy
 
     -c, --command
         Command to run. Choices:
-        e|events   - Watch event stream
+        e|events   - Watch (some of) the event stream
+        l|callback - Another way to watch event stream
         t|trigger  - Trigger motion on a camera
         p|picture  - Save a live picture to a file
         v|video    - Save a live 10 second video to a file
