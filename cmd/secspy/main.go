@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"strconv"
@@ -234,21 +233,11 @@ func (c *Config) downloadFile() {
 	if _, err := os.Stat(savePath); !os.IsNotExist(err) {
 		log.Fatalln("File already exists:", savePath)
 	}
-	outFile, err := os.Create(savePath)
-	if err != nil {
-		log.Fatalln("Error creating file:", err)
-	}
-	defer func() {
-		_ = outFile.Close()
-	}()
-	body, err := srv.Files().GetFile(fileName)
+	file, err := srv.Files().GetFile(fileName)
 	if err != nil {
 		log.Fatalln("Error getting file:", err)
 	}
-	defer func() {
-		_ = body.Close()
-	}()
-	size, err := io.Copy(outFile, body)
+	size, err := file.Save(savePath)
 	if err != nil {
 		log.Fatalln("Error writing file:", err)
 	}
