@@ -2,13 +2,13 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/davidnewhall/go-securityspy"
+  name = "github.com/golift/securityspy"
   packages = [
     ".",
     "ffmpegencode"
   ]
-  revision = "f9dbb934f27f5384caa29c9aef0ac3d7794a9cbe"
+  revision = "755fae8a639a77099f94ae8804f6d2cd0764d6ac"
+  version = "0.9.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -25,6 +25,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8e4c359b790393e3a691cd6c5cfce974ca6c039caa116615186fb7ae76a94947"
+  inputs-digest = "fc220a2cacd24740abc7b3eaa2b2fe08535a2c3df429b7a666d38564052d375c"
   solver-name = "gps-cdcl"
   solver-version = 1

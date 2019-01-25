@@ -5,12 +5,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	securityspy "github.com/davidnewhall/go-securityspy"
+	securityspy "github.com/golift/securityspy"
 	flg "github.com/spf13/pflag"
 )
 
@@ -32,7 +33,6 @@ func main() {
 	config := parseFlags()
 	securityspy.Encoder = "/usr/local/bin/ffmpeg"
 	switch config.Cmd {
-
 	// Demonstrates event channels. Events always happen in order.
 	// Do not block the channel or things stop working.
 	case "events", "event", "e":
@@ -47,14 +47,13 @@ func main() {
 		go config.Server.Events.Watch(10*time.Second, true)
 		for event := range channel {
 			config.showEvent(event)
-			if event.Event == securityspy.EventStreamDisconnect {
+			if event.Type == securityspy.EventStreamDisconnect {
 				config.Server.Events.UnbindAll()
 				config.Server.Events.Stop()
 				fmt.Println("Got disconnect, bailing out.")
 				os.Exit(1)
 			}
 		}
-
 		// Demonstrates event callbacks. Sometimes they fire out of order.
 		// They happen in a go routine, so they can be blocking operations.
 	case "callbacks", "callback", "call", "l":
@@ -62,7 +61,6 @@ func main() {
 		fmt.Println("Watching Event Stream (all events, forever)")
 		config.Server.Events.BindFunc(securityspy.EventAllEvents, config.showEvent)
 		config.Server.Events.Watch(10*time.Second, true)
-
 	case "cameras", "cams", "cam", "c":
 		config.printCamData()
 	case "video", "vid", "v":
@@ -77,6 +75,8 @@ func main() {
 		config.downloadFile()
 	case "ptz", "z":
 		config.controlPTZ()
+	case "arm", "a":
+		config.armEverything()
 	default:
 		_, _ = fmt.Fprintln(os.Stderr, "invalid command:", config.Cmd)
 		flg.Usage()
@@ -95,7 +95,7 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Pass, "pass", "p", os.Getenv("SECSPY_PASSWORD"), "Password to authenticate with")
 	flg.StringVarP(&config.URL, "url", "U", "http://127.0.0.1:8000", "SecuritySpy URL")
 	flg.BoolVarP(&config.UseSSL, "verify-ssl", "s", false, "Validate SSL certificate if using https")
-	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download, ptz")
+	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download, ptz, arm")
 	flg.StringVarP(&config.Arg, "arg", "a", "", "if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
@@ -112,10 +112,10 @@ func (c *Config) getServer() *securityspy.Server {
 		fmt.Println("SecuritySpy Error:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("%v %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
-		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.IP1,
-		c.Server.Info.HTTPPort, c.Server.Cameras.Count,
-		len(c.Server.Info.Scripts.Names), len(c.Server.Info.Sounds.Names))
+	fmt.Printf("%v %v @ %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
+		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.CurrentTime,
+		c.Server.Info.IP1, c.Server.Info.HTTPPort, c.Server.Cameras.Count,
+		len(c.Server.Info.ScriptsNames), len(c.Server.Info.SoundsNames))
 	return c.Server
 }
 
@@ -150,7 +150,7 @@ func (c *Config) showEvent(e securityspy.Event) {
 		camString = "SecuritySpy Server"
 	}
 	fmt.Printf("[%v] Event %d: %v, %v, Msg: %v\n",
-		e.When, e.ID, e.Event.Event(), camString, e.Msg)
+		e.When, e.ID, e.String(), camString, e.Msg)
 }
 
 // printCamData formats camera data onto a screen for an operator.
@@ -159,10 +159,10 @@ func (c *Config) printCamData() {
 		fmt.Printf("%2v: %-14v (%-4vx%-4v %5v/%-7v %v) connected: %3v, down %v, modes: C:%-8v M:%-8v A:%-8v "+
 			"%2vFPS, Audio:%3v, MD: %3v/pre:%v/post:%3v idle %-10v Script: %v (reset %v)\n",
 			camera.Number, camera.Name, camera.Width, camera.Height, camera.DeviceName, camera.DeviceType, camera.Address,
-			camera.Connected.Val, camera.TimeSinceLastFrame.Dur.String(), camera.ModeC.Txt, camera.ModeM.Txt,
+			camera.Connected.Val, camera.TimeSinceLastFrame.String(), camera.ModeC.Txt, camera.ModeM.Txt,
 			camera.ModeA.Txt+",", int(camera.CurrentFPS), camera.HasAudio.Txt, camera.MDenabled.Txt,
-			camera.MDpreCapture.Dur.String(), camera.MDpostCapture.Dur.String(),
-			camera.TimeSinceLastMotion.Dur.String(), camera.ActionScriptName, camera.ActionResetTime.Dur.String())
+			camera.MDpreCapture.String(), camera.MDpostCapture.String(),
+			camera.TimeSinceLastMotion.String(), camera.ActionScriptName, camera.ActionResetTime.String())
 	}
 }
 
@@ -334,4 +334,40 @@ func (c *Config) controlPTZ() {
 		os.Exit(1)
 	}
 	fmt.Println(command, "command sent to", camera.Name)
+}
+
+func (c *Config) armEverything() {
+	if c.Arg == "" {
+		fmt.Println("Arms all modes on a camera.")
+		fmt.Println("Supply the Camera  with -a 'Camera'")
+		fmt.Println("Example: secspy -c a -a 'Door Cam'")
+		os.Exit(1)
+	}
+
+	srv := c.getServer()
+	splitStr := strings.Split(c.Arg, ":")
+	camera := srv.Cameras.ByName(splitStr[0])
+	schedules := srv.Info.Schedules
+	mode := securityspy.CameraModeAll // or CameraModeMotion, CameraModeActions, CameraModeContinous
+
+	for _, schedule := range schedules {
+		if schedule.ID == 1 { // 1 is always Arm 24/7, and 0 is Unarm 24/7.
+			if err := camera.SetSchedule(mode, schedule); err != nil {
+				log.Fatal("Error Setting Camera Schedule:", err)
+			}
+			fmt.Println(schedule.Name, "-> schedule set on camera:", camera.Name)
+			break
+		}
+	}
+	/* Another way */
+	// schedule := securityspy.Schedule{ID: 1, Name: "Always Armed"} // 1 is always Arm 24/7
+	// if err := camera.SetSchedule(securityspy.CameraModeAll, schedule); err != nil {
+	//	log.Fatal("Error Setting Camera Schedule:", err)
+	// }
+
+	if err := camera.SetScheduleOverride(mode, securityspy.ScheduleOverrideNone); err != nil {
+		log.Fatal("Error Setting Schedule Override:", err)
+	}
+	fmt.Println("Set", securityspy.ScheduleOverrideNone.String(), "-> on camera:", camera.Name)
+
 }

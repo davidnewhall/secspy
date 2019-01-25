@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/davidnewhall/go-securityspy"
-
 [[constraint]]
   name = "github.com/spf13/pflag"
   version = "1.0.3"
