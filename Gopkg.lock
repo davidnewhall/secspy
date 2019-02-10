@@ -2,29 +2,43 @@
 
 
 [[projects]]
-  name = "github.com/golift/securityspy"
-  packages = [
-    ".",
-    "ffmpegencode"
-  ]
-  revision = "755fae8a639a77099f94ae8804f6d2cd0764d6ac"
-  version = "0.9.0"
+  digest = "1:b936b904b1cfa23889f61635efcbc2ef3ea600c864378db0b164c29ff1cd762b"
+  name = "github.com/golift/ffmpeg"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "82a404c8777fe9ac6fcb0d73cc4e489321a63fe4"
+  version = "v1.0.0"
 
 [[projects]]
+  digest = "1:78604b1a8000588c282211c4bfcf4970c49fbbd25f05cafe11f9ba0fe7c6cb61"
+  name = "github.com/golift/securityspy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a1bcc55c5deeb23ca712b1b7fd206c0edb60c961"
+  version = "v1.0.0b"
+
+[[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
+  pruneopts = "UT"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fc220a2cacd24740abc7b3eaa2b2fe08535a2c3df429b7a666d38564052d375c"
+  input-imports = [
+    "github.com/golift/securityspy",
+    "github.com/spf13/pflag",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

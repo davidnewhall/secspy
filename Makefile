@@ -2,12 +2,12 @@ BINARY=secspy
 PACKAGES=`find ./cmd -mindepth 1 -maxdepth 1 -type d`
 LIBRARYS=
 
-all: clean man build
+all: clean man test build
 
 clean:
 	for p in $(PACKAGES); do rm -f `echo $${p}|cut -d/ -f3`{,.1,.1.gz}; done
 
-build: test
+build:
 	for p in $(PACKAGES); do go build -ldflags "-w -s" $${p}; done
 
 linux:

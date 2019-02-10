@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	securityspy "github.com/golift/securityspy"
+	"github.com/golift/securityspy"
 	flg "github.com/spf13/pflag"
 )
 
 // Version of the app
-var Version = "1.0.0"
+var Version = "1.0.1"
 
 // Config represents the CLI args + securityspy.Server.
 type Config struct {
@@ -112,10 +112,13 @@ func (c *Config) getServer() *securityspy.Server {
 		fmt.Println("SecuritySpy Error:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("%v %v @ %v (http://%v:%v/) %d cameras, %d scripts, %d sounds\n",
+	scripts, _ := c.Server.GetScripts() // These each do another web request.
+	sounds, _ := c.Server.GetSounds()
+	fmt.Printf("%v %v @ %v (http://%v:%v/) %d cameras, %d scripts, %d sounds, %d schedules, %d schedule presets\n",
 		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.CurrentTime,
-		c.Server.Info.IP1, c.Server.Info.HTTPPort, c.Server.Cameras.Count,
-		len(c.Server.Info.ScriptsNames), len(c.Server.Info.SoundsNames))
+		c.Server.Info.IP1, c.Server.Info.HTTPPort, len(c.Server.Cameras.Names),
+		len(scripts), len(sounds),
+		len(c.Server.Info.ServerSchedules), len(c.Server.Info.SchedulePresets))
 	return c.Server
 }
 
@@ -149,8 +152,8 @@ func (c *Config) showEvent(e securityspy.Event) {
 	} else if e.ID < 0 {
 		camString = "SecuritySpy Server"
 	}
-	fmt.Printf("[%v] Event %d: %v, %v, Msg: %v\n",
-		e.When, e.ID, e.String(), camString, e.Msg)
+	fmt.Printf("[%v] Event %d: %v, %v, Msg: (errors: %d) %v\n",
+		e.When, e.ID, e.String(), camString, len(e.Errors), e.Msg)
 }
 
 // printCamData formats camera data onto a screen for an operator.
@@ -347,15 +350,15 @@ func (c *Config) armEverything() {
 	srv := c.getServer()
 	splitStr := strings.Split(c.Arg, ":")
 	camera := srv.Cameras.ByName(splitStr[0])
-	schedules := srv.Info.Schedules
+	schedules := srv.Info.ServerSchedules
 	mode := securityspy.CameraModeAll // or CameraModeMotion, CameraModeActions, CameraModeContinous
 
-	for _, schedule := range schedules {
-		if schedule.ID == 1 { // 1 is always Arm 24/7, and 0 is Unarm 24/7.
-			if err := camera.SetSchedule(mode, schedule); err != nil {
+	for id, schedule := range schedules {
+		if id == 1 { // 1 is always Arm 24/7, and 0 is Unarm 24/7.
+			if err := camera.SetSchedule(mode, id); err != nil {
 				log.Fatal("Error Setting Camera Schedule:", err)
 			}
-			fmt.Println(schedule.Name, "-> schedule set on camera:", camera.Name)
+			fmt.Println(schedule, "-> schedule set on camera:", camera.Name)
 			break
 		}
 	}
@@ -364,10 +367,14 @@ func (c *Config) armEverything() {
 	// if err := camera.SetSchedule(securityspy.CameraModeAll, schedule); err != nil {
 	//	log.Fatal("Error Setting Camera Schedule:", err)
 	// }
-
-	if err := camera.SetScheduleOverride(mode, securityspy.ScheduleOverrideNone); err != nil {
-		log.Fatal("Error Setting Schedule Override:", err)
+	for id, override := range srv.Info.ScheduleOverrides {
+		if override == "None" {
+			if err := camera.SetScheduleOverride(mode, id); err != nil {
+				log.Fatal("Error Setting Schedule Override:", err)
+			}
+			fmt.Println("Set Override:", override, "-> on camera:", camera.Name)
+			break
+		}
 	}
-	fmt.Println("Set", securityspy.ScheduleOverrideNone.String(), "-> on camera:", camera.Name)
 
 }
