@@ -9,7 +9,6 @@ If you have feature requests or bug reports, please open an Issue.
 
 Install with homebrew.
 ```shell
-brew tap golift/mugs
 brew install golift/mugs/secspy
 secspy --help
 ```
