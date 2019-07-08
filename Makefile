@@ -266,7 +266,7 @@ docker:
 		--build-arg "BUILD_DATE=${DATE}" \
 		--build-arg "COMMIT=${COMMIT}" \
 		--build-arg "VERSION=${VERSION}" \
-		-t $(DHUSER)/$(BINARY):local .
+		--tag $(DHUSER)/$(BINARY):local .
 
 # Build an environment that can be packaged for linux.
 package_build_linux: readme man linux
