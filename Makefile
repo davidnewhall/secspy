@@ -12,6 +12,8 @@ BINARY:=$(shell basename $(shell pwd))
 URL:=https://github.com/$(GHUSER)/$(BINARY)
 CONFIG_FILE=secspy.conf
 
+VERSION_PATH:=github.com/$(GHUSER)/$(BINARY)/ss.Version
+
 # These don't generally need to be changed.
 
 # md2roff turns markdown into man files and html files.
@@ -29,11 +31,9 @@ endif
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 DATE:=$(shell date)
 
-VERSION_PATH:=main.Version
-
 # Makefile targets follow.
 
-all: man build
+all: build
 
 # Prepare a release. Called in Travis CI.
 release: clean vendor test macos arm windows linux_packages
