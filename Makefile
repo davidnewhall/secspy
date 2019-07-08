@@ -12,7 +12,7 @@ BINARY:=$(shell basename $(shell pwd))
 URL:=https://github.com/$(GHUSER)/$(BINARY)
 CONFIG_FILE=secspy.conf
 
-VERSION_PATH:=github.com/$(GHUSER)/$(BINARY)/ss.Version
+VERSION_PATH:=github.com/$(GHUSER)/$(BINARY)/cli.Version
 
 # These don't generally need to be changed.
 
@@ -29,7 +29,8 @@ ifeq ($(VERSION),)
 endif
 # rpm is wierd and changes - to _ in versions.
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
-DATE:=$(shell date)
+DATE:=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+COMMIT:=$(shell git rev-parse --short HEAD || echo 0)
 
 # Makefile targets follow.
 
@@ -261,7 +262,11 @@ $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf check_fpm
 		--chdir $<
 
 docker:
-	docker build -f init/docker/Dockerfile -t $(DHUSER)/$(BINARY):local .
+	docker build -f init/docker/Dockerfile \
+		--build-arg "BUILD_DATE=${DATE}" \
+		--build-arg "COMMIT=${COMMIT}" \
+		--build-arg "VERSION=${VERSION}" \
+		-t $(DHUSER)/$(BINARY):local .
 
 # Build an environment that can be packaged for linux.
 package_build_linux: readme man linux
