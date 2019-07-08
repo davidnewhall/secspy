@@ -1,26 +1,15 @@
 #
 # building static go binary with Debian golang container
 #
-
-FROM golang:stretch as builder
 ARG ARCH=amd64
 ARG OS=linux
 ARG BUILD_DATE=0
 ARG COMMIT=0
 ARG VERSION=development
 
-# Build-time metadata as defined at http://label-schema.org
-LABEL org.label-schema.build-date="${BUILD_DATE}" \
-      org.label-schema.name="UniFi Poller" \
-      org.label-schema.description="Polls a UniFi controller and stores metrics in InfluxDB" \
-      org.label-schema.url="https://github.com/davidnewhall/unifi-poller" \
-      org.label-schema.vcs-ref="${COMMIT}" \
-      org.label-schema.vcs-url="https://github.com/davidnewhall/unifi-poller" \
-      org.label-schema.vendor="Go Lift" \
-      org.label-schema.architecture="${OS} ${ARCH}" \
-      org.label-schema.license="MIT" \
-      org.label-schema.version="${VERSION}" \
-      org.label-schema.schema-version="1.0"
+FROM golang:stretch as builder
+ARG ARCH
+ARG OS
 
 RUN mkdir -p $GOPATH/pkg/mod $GOPATH/bin $GOPATH/src/github.com/davidnewhall/secspy
 RUN apt-get update \
@@ -31,12 +20,30 @@ COPY . $GOPATH/src/github.com/davidnewhall/secspy
 WORKDIR $GOPATH/src/github.com/davidnewhall/secspy
 
 RUN dep ensure --vendor-only \
-  && CGO_ENABLED=0 make secspy.${ARCH}.${OS} \
-  && mv secspy.${ARCH}.${OS} secspy
+  && CGO_ENABLED=0 make secspy.${ARCH}.${OS}
 
 FROM scratch
+ARG ARCH
+ARG OS
+ARG BUILD_DATE
+ARG COMMIT
+ARG VERSION
 
-COPY --from=builder /go/src/github.com/davidnewhall/secspy/secspy /secspy
+# Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/master/annotations.md
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="UniFi Poller" \
+      org.opencontainers.image.documentation="https://github.com/davidnewhall/unifi-poller/wiki" \
+      org.opencontainers.image.description="Polls a UniFi controller and stores metrics in InfluxDB" \
+      org.opencontainers.image.url="https://github.com/davidnewhall/unifi-poller" \
+      org.opencontainers.image.revision="${COMMIT}" \
+      org.opencontainers.image.source="https://github.com/davidnewhall/unifi-poller" \
+      org.opencontainers.image.vendor="Go Lift" \
+      org.opencontainers.image.authors="David Newhall II <david at sleepers dot pro>" \
+      org.opencontainers.image.architecture="${OS} ${ARCH}" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${VERSION}"
+
+COPY --from=builder /go/src/github.com/davidnewhall/secspy/secspy.${ARCH}.${OS} /secspy
 COPY --from=builder /go/src/github.com/davidnewhall/secspy/examples/secspy.conf.example /etc/secspy/up.conf
 
 VOLUME [ "/etc/secspy" ]
