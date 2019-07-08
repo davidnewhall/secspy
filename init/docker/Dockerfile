@@ -31,12 +31,12 @@ ARG VERSION
 
 # Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/master/annotations.md
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="UniFi Poller" \
-      org.opencontainers.image.documentation="https://github.com/davidnewhall/unifi-poller/wiki" \
-      org.opencontainers.image.description="Polls a UniFi controller and stores metrics in InfluxDB" \
-      org.opencontainers.image.url="https://github.com/davidnewhall/unifi-poller" \
+      org.opencontainers.image.title="Security Spy CLI" \
+      org.opencontainers.image.documentation="https://github.com/davidnewhall/secspy/wiki" \
+      org.opencontainers.image.description="Command Line Interface for Security Spy" \
+      org.opencontainers.image.url="https://github.com/davidnewhall/secspy" \
       org.opencontainers.image.revision="${COMMIT}" \
-      org.opencontainers.image.source="https://github.com/davidnewhall/unifi-poller" \
+      org.opencontainers.image.source="https://github.com/davidnewhall/secspy" \
       org.opencontainers.image.vendor="Go Lift" \
       org.opencontainers.image.authors="David Newhall II <david at sleepers dot pro>" \
       org.opencontainers.image.architecture="${OS} ${ARCH}" \
