@@ -81,7 +81,7 @@ func Start() error {
 		config.armEverything()
 	default:
 		flg.Usage()
-		return errors.New(fmt.Sprintf("invalid command: %s", config.Cmd))
+		return fmt.Errorf("invalid command: %s", config.Cmd)
 	}
 	return nil
 }
