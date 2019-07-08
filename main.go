@@ -95,8 +95,10 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Pass, "pass", "p", os.Getenv("SECSPY_PASSWORD"), "Password to authenticate with")
 	flg.StringVarP(&config.URL, "url", "U", "http://127.0.0.1:8000", "SecuritySpy URL")
 	flg.BoolVarP(&config.UseSSL, "verify-ssl", "s", false, "Validate SSL certificate if using https")
-	flg.StringVarP(&config.Cmd, "command", "c", "", "Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download, ptz, arm")
-	flg.StringVarP(&config.Arg, "arg", "a", "", "if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
+	flg.StringVarP(&config.Cmd, "command", "c", "",
+		"Command to run. Currently supports: events/callback, cams, pic, vid, trigger, files, download, ptz, arm")
+	flg.StringVarP(&config.Arg, "arg", "a", "",
+		"if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
 		fmt.Println("secspy version:", Version)
@@ -226,7 +228,7 @@ func (c *Config) showFiles() {
 		}
 	}
 	srv := c.getServer()
-	var cameraNums []int
+	cameraNums := []int{}
 	// Loop the provided camera names and find their numbers.
 	for _, name := range strings.Split(split[0], ",") {
 		cam := srv.Cameras.ByName(name)
