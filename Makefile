@@ -21,7 +21,6 @@ endif
 # rpm is wierd and changes - to _ in versions.
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 
-
 # Makefile targets follow.
 
 all: build
@@ -43,7 +42,7 @@ clean:
 	rm -f $(BINARY) $(BINARY).*.{macos,linux,exe}{,.gz,.zip} $(BINARY).1{,.gz} $(BINARY).rb
 	rm -f $(BINARY){_,-}*.{deb,rpm} v*.tar.gz.sha256
 	rm -f cmd/$(BINARY)/README{,.html} README{,.html} ./$(BINARY)_manual.html
-	rm -rf package_build_* release
+	rm -rf package_build_* release .metadata.make
 
 # Build a man page from a markdown file using md2roff.
 # This also turns the repo readme into an html file.
@@ -311,9 +310,8 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 		-e "s/{{Desc}}/$(DESC)/g" \
 		-e "s%{{URL}}%$(URL)%g" \
 		-e "s%{{GHREPO}}%$(GHREPO)%g" \
-		-e "s%{{CAVEATS}}%$(shell echo -n "${CAVEATS}")%g" \
 		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
-		init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
+		init/homebrew/formula.rb.tmpl | tee $(BINARY).rb
 
 # Extras
 

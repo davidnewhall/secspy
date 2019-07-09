@@ -22,12 +22,6 @@ class {{Class}} < Formula
     end
   end
 
-  def caveats
-    <<-EOS
-    {{CAVEATS}}
-    EOS
-  end
-
   test do
     assert_match "#{name} v#{version}", shell_output("#{bin}/#{name} -v 2>&1", 2)
   end

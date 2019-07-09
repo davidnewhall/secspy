@@ -5,14 +5,16 @@ BINARY="secspy"
 GHUSER="davidnewhall"
 # docker hub username
 DHUSER="golift"
+# Github repo containing homebrew formula repo.
+HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
 VENDOR="Go Lift"
 DESC="Command Line Interface for SecuritySpy (IP Camera NVR)"
 GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals"
 CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
-# Used in homebrew formula.
-CAVEATS="  Good Luck!"
+
+export BINARY GHUSER DHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE
 
 # The rest if mostly automatic.
 
@@ -29,5 +31,4 @@ ITERATION=$(git rev-list --count --all || echo 0)
 DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 COMMIT="$(git rev-parse --short HEAD || echo 0)"
 
-export GHUSER DHUSER MAINT VENDOR DESC CONFIG_FILE LICENSE GOLANGCI_LINT_ARGS
-export BINARY GHREPO URL VERSION_PATH VERSION ITERATION DATE COMMIT
+export GHREPO URL VERSION_PATH VERSION ITERATION DATE COMMIT
