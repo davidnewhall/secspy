@@ -1,6 +1,7 @@
 # Each line must have an export clause.
 # This file is parsed and sourced by the Makefile, Docker and Homebrew builds.
 TITLE="SecuritySpy CLI"
+BINARY="secspy"
 # github username
 GHUSER="davidnewhall"
 # docker hub username
@@ -14,8 +15,6 @@ LICENSE="MIT"
 
 # The rest if mostly automatic.
 
-BINARY="$(basename -s .git $(git config --get remote.origin.url))"
-[ "$BINARY" != "" ] || BINARY="$(basename $(pwd))"
 GHREPO="${GHUSER}/${BINARY}"
 URL="https://github.com/${GHREPO}"
 
