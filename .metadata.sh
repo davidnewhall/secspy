@@ -14,13 +14,13 @@ LICENSE="MIT"
 
 # The rest if mostly automatic.
 
-BINARY="$(basename $(git rev-parse --show-toplevel))"
+BINARY="$(basename -s .git $(git config --get remote.origin.url))"
 [ "$BINARY" != "" ] || BINARY="$(basename $(pwd))"
 GHREPO="${GHUSER}/${BINARY}"
 URL="https://github.com/${GHREPO}"
 
 # This parameter is passed in as -X to go build. Used to override the Version variable in a package.
-VERSION_PATH="github.com/${GHUSER}/${BINARY}/cli.Version"
+VERSION_PATH="github.com/${GHREPO}/cli.Version"
 
 # Dynamic. Recommend not changing.
 VERSION="$(git tag -l --merged | tail -n1 | tr -d v || echo development)"
