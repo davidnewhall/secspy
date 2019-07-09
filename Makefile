@@ -263,6 +263,7 @@ docker:
 		--build-arg "AUTHOR=$(MAINT)" \
 		--build-arg "BINARY=$(BINARY)" \
 		--build-arg "GHREPO=$(GHREPO)" \
+		--build-arg "CONFIG_FILE=$(CONFIG_FILE)" \
 		--tag $(DHUSER)/$(BINARY):local .
 
 # Build an environment that can be packaged for linux.

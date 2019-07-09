@@ -27,6 +27,7 @@ for build in $BUILDS; do
     --build-arg "AUTHOR=${MAINT}" \
     --build-arg "BINARY=${BINARY}" \
     --build-arg "GHREPO=${GHREPO}" \
+    --build-arg "CONFIG_FILE=${CONFIG_FILE}" \
     --tag "${IMAGE_NAME}_${os}_${name}" \
     --file ${DOCKERFILE_PATH} .
 done
