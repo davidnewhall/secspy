@@ -253,15 +253,16 @@ $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf check_fpm
 
 docker:
 	docker build -f init/docker/Dockerfile \
-		--build-arg "BUILD_DATE=${DATE}" \
-		--build-arg "COMMIT=${COMMIT}" \
-		--build-arg "VERSION=${VERSION}-${ITERATION}" \
-		--build-arg "LICENSE=${LICENSE}" \
-		--build-arg "TITLE=${TITLE}" \
-		--build-arg "DESC=${DESC}" \
-		--build-arg "URL=${URL}" \
-		--build-arg "VENDOR=${VENDOR}" \
-		--build-arg "AUTHOR=${MAINT}" \
+		--build-arg "BUILD_DATE=$(DATE)" \
+		--build-arg "COMMIT=$(COMMIT)" \
+		--build-arg "VERSION=$(VERSION)-$(ITERATION)" \
+		--build-arg "LICENSE=$(LICENSE)" \
+		--build-arg "DESC=$(DESC)" \
+		--build-arg "URL=$(URL)" \
+		--build-arg "VENDOR=$(VENDOR)" \
+		--build-arg "AUTHOR=$(MAINT)" \
+		--build-arg "BINARY=$(BINARY)" \
+		--build-arg "GHREPO=$(GHREPO)" \
 		--tag $(DHUSER)/$(BINARY):local .
 
 # Build an environment that can be packaged for linux.
