@@ -103,7 +103,7 @@ func parseFlags() *Config {
 		"if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 	version := flg.BoolP("version", "v", false, "Print the version and exit")
 	if flg.Parse(); *version {
-		fmt.Println("secspy version:", Version)
+		fmt.Printf("secspy v%s", Version)
 		os.Exit(0) // don't run anything else.
 	}
 	return config

@@ -16,6 +16,6 @@ git clone git@github.com:golift/homebrew-mugs.git
 
 cp ${BINARY}.rb homebrew-mugs/Formula
 pushd homebrew-mugs
-git commit -m "Update ${BINARY} on Release: ${VERSION}-${ITERATION}" Formula/${BINARY}.rb
+git commit -m "Update ${BINARY} on Release: v${VERSION}-${ITERATION}" Formula/${BINARY}.rb
 git push
 popd
