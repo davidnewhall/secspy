@@ -1,9 +1,10 @@
 #!/bin/bash
-
 # This post build hook creates multi-architecture docker manifests.
 # It's all a bit complicated for some reason.
+
 set -e -o pipefail
 
+# This always run local to the Dockerfile folder, so the path is ../..
 pushd ../..
 source .metadata.sh
 popd
