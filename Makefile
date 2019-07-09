@@ -11,12 +11,14 @@ MD2ROFF_BIN=github.com/github/hub/md2roff-bin
 ifeq ($(VERSION),)
 	include .metadata.make
 else
-	# Preserve the passed-in version & iteration (homebrew).
-  _VERSION:=$(VERSION)
-  _ITERATION:=$(ITERATION)
+	# Preserve the passed-in binary, version & iteration (homebrew).
+	_VERSION:=$(VERSION)
+	_BINARY:=$(BINARY)
+	_ITERATION:=$(ITERATION)
 	include .metadata.make
 	VERSION:=$(_VERSION)
 	ITERATION:=$(_ITERATION)
+	BINARY:=$(_BINARY)
 endif
 # rpm is wierd and changes - to _ in versions.
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
