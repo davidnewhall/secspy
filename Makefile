@@ -1,9 +1,8 @@
 # This Makefile is written as generic as possible.
-# Setting these variables and creating the necesarry paths in your GitHub repo will make this file work.
+# Setting the variables in .metadata.sh and creating the paths in the repo makes this work.
 #
 
 IGNORE := $(shell bash -c "source .metadata.sh ; env | sed 's/=/:=/;s/^/export /' > .metadata.make")
-
 
 # md2roff turns markdown into man files and html files.
 MD2ROFF_BIN=github.com/github/hub/md2roff-bin
@@ -18,6 +17,7 @@ else
 	VERSION:=$(_VERSION)
 	ITERATION:=$(_ITERATION)
 endif
+
 # rpm is wierd and changes - to _ in versions.
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 
@@ -40,9 +40,9 @@ release: clean vendor test macos arm windows linux_packages
 clean:
 	# Cleaning up.
 	rm -f $(BINARY) $(BINARY).*.{macos,linux,exe}{,.gz,.zip} $(BINARY).1{,.gz} $(BINARY).rb
-	rm -f $(BINARY){_,-}*.{deb,rpm} v*.tar.gz.sha256
+	rm -f $(BINARY){_,-}*.{deb,rpm} v*.tar.gz.sha256 .metadata.make
 	rm -f cmd/$(BINARY)/README{,.html} README{,.html} ./$(BINARY)_manual.html
-	rm -rf package_build_* release .metadata.make
+	rm -rf package_build_* release
 
 # Build a man page from a markdown file using md2roff.
 # This also turns the repo readme into an html file.
@@ -268,14 +268,17 @@ docker:
 # Build an environment that can be packaged for linux.
 package_build_linux: readme man linux
 	# Building package environment for linux.
-	mkdir -p $@/usr/bin $@/etc/$(BINARY)
-	mkdir -p $@/usr/share/man/man1 $@/usr/share/doc/$(BINARY)
+	mkdir -p $@/usr/bin $@/etc/$(BINARY) $@/usr/share/man/man1 $@/usr/share/doc/$(BINARY)
 	# Copying the binary, config file, unit file, and man page into the env.
 	cp $(BINARY).amd64.linux $@/usr/bin/$(BINARY)
 	cp *.1.gz $@/usr/share/man/man1
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/share/doc/$(BINARY)/
+	[ ! -f init/systemd/template.unit.service ] || mkdir -p $@/lib/systemd/system
+	[ ! -f init/systemd/template.unit.service ] || \
+		sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{DESC}}/$(DESC)/g" \
+		init/systemd/template.unit.service > $@/lib/systemd/system/$(BINARY).service
 
 package_build_linux_386: package_build_linux linux386
 	mkdir -p $@
@@ -310,6 +313,7 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 		-e "s/{{Desc}}/$(DESC)/g" \
 		-e "s%{{URL}}%$(URL)%g" \
 		-e "s%{{GHREPO}}%$(GHREPO)%g" \
+		-e "s%{{CONFIG_FILE}}%$(CONFIG_FILE)%g" \
 		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
 		init/homebrew/formula.rb.tmpl | tee $(BINARY).rb
 
@@ -351,4 +355,3 @@ install: man readme $(BINARY)
 	/usr/bin/install -m 0644 -cp examples/$(CONFIG_FILE).example $(ETC)/$(BINARY)/
 	[ -f $(ETC)/$(BINARY)/$(CONFIG_FILE) ] || /usr/bin/install -m 0644 -cp  examples/$(CONFIG_FILE).example $(ETC)/$(BINARY)/$(CONFIG_FILE)
 	/usr/bin/install -m 0644 -cp LICENSE *.html examples/* $(PREFIX)/share/doc/$(BINARY)/
-	# These go to their own folder so the img src in the html pages continue to work.
