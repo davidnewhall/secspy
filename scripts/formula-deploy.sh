@@ -6,20 +6,12 @@
 
 source .metadata.sh
 
-if [ -z "$VERSION" ]; then
-  VERSION=$TRAVIS_TAG
-fi
-VERSION=$(echo $VERSION|tr -d v)
+make ${BINARY}.rb
 
-make ${BINARY}.rb VERSION=$VERSION
-
-if [ -z "$VERSION" ]; then
-  VERSION=$(grep -E '^\s+url\s+"' ${BINARY}.rb | cut -d/ -f7 | cut -d. -f1,2,3)
-fi
-
-rm -rf homebrew-mugs
 git config --global user.email "${BINARY}@auto.releaser"
 git config --global user.name "${BINARY}-auto-releaser"
+
+rm -rf homebrew-mugs
 git clone git@github.com:golift/homebrew-mugs.git
 
 cp ${BINARY}.rb homebrew-mugs/Formula

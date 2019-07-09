@@ -12,9 +12,9 @@ class Secspy < Formula
   def install
     ENV["GOPATH"] = buildpath
 
-    bin_path = buildpath/"src/github.com/davidnewhall/secspy"
+    bin_path = buildpath/"src/github.com/{{GHREPO}}/#{name}"
     # Copy all files from their current location (GOPATH root)
-    # to $GOPATH/src/github.com/davidnewhall/secspy
+    # to $GOPATH/src/github.com/{{GHREPO}}/#{name}
     bin_path.install Dir["*",".??*"]
     cd bin_path do
       system "dep", "ensure", "--vendor-only"
@@ -29,6 +29,6 @@ class Secspy < Formula
   end
 
   test do
-    assert_match "secspy v#{version}", shell_output("#{bin}/secspy -v 2>&1", 2)
+    assert_match "#{name} v#{version}", shell_output("#{bin}/#{name} -v 2>&1", 2)
   end
 end

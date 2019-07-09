@@ -11,6 +11,8 @@ DESC="Command Line Interface for SecuritySpy (IP Camera NVR)"
 GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals"
 CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
+# Used in homebrew formula.
+CAVEATS="  Good Luck!"
 
 # The rest if mostly automatic.
 

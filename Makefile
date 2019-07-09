@@ -309,6 +309,8 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 		-e "s/{{SHA256}}/`head -c64 $<`/g" \
 		-e "s/{{Desc}}/$(DESC)/g" \
 		-e "s%{{URL}}%$(URL)%g" \
+		-e "s%{{GHREPO}}%$(GHREPO)%g" \
+		-e "s%{{CAVEATS}}%$(CAVEATS)%g" \
 		init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
 
 # Extras
