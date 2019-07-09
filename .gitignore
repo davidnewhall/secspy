@@ -1,5 +1,6 @@
 # Binaries for programs and plugins
 /secspy
+/secspy.rb
 *.exe
 *.exe~
 *.gz
@@ -22,3 +23,4 @@ release
 package_build_*
 MANUAL
 /.metadata.make
+*.sha256

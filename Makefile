@@ -303,7 +303,12 @@ v$(VERSION).tar.gz.sha256:
 	curl -sL $(URL)/archive/v$(VERSION).tar.gz | openssl dgst -r -sha256 | tee $@
 $(BINARY).rb: v$(VERSION).tar.gz.sha256
 	# Creating formula from template using sed.
-	sed "s/{{Version}}/$(VERSION)/g;s/{{SHA256}}/`head -c64 $<`/g;s/{{Desc}}/$(DESC)/g;s%{{URL}}%$(URL)%g" init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
+	sed -e "s/{{Version}}/$(VERSION)/g" \
+		-e "s/{{Iter}}/$(ITERATION)/g" \
+		-e "s/{{SHA256}}/`head -c64 $<`/g" \
+		-e "s/{{Desc}}/$(DESC)/g" \
+		-e "s%{{URL}}%$(URL)%g" \
+		init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
 
 # Extras
 
