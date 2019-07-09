@@ -4,7 +4,7 @@
 # Requires SSH credentials in ssh-agent to work.
 # Run by Travis-CI when a new release is created on GitHub.
 
-source ../.metadata.sh
+source .metadata.sh
 
 if [ -z "$VERSION" ]; then
   VERSION=$TRAVIS_TAG
