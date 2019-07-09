@@ -19,8 +19,6 @@ GHREPO="${GHUSER}/${BINARY}"
 URL="https://github.com/${GHREPO}"
 
 # This parameter is passed in as -X to go build. Used to override the Version variable in a package.
-# This makes a path like github.com/davidnewhall/unifi-poller/unifipoller.Version=1.3.3
-# Name the Version-containing library the same as the github repo, without dashes.
 VERSION_PATH="github.com/$(GHUSER)/$(BINARY)/cli.Version"
 
 # Dynamic. Recommend not changing.
