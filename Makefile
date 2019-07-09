@@ -311,7 +311,7 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 		-e "s/{{Desc}}/$(DESC)/g" \
 		-e "s%{{URL}}%$(URL)%g" \
 		-e "s%{{GHREPO}}%$(GHREPO)%g" \
-		-e "s%{{CAVEATS}}%$(CAVEATS)%g" \
+		-e "s%{{CAVEATS}}%$(shell echo -n "${CAVEATS}")%g" \
 		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
 		init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
 

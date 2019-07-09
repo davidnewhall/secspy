@@ -27,7 +27,7 @@ install:
 - make docker
 script:
 # Test built docker image.
-- docker run golift/secspy:local -v 2>&1 | grep -Eq "^secspy version"
+- docker run golift/secspy:local -v 2>&1 | grep -Eq "^secspy v"
 # test and build everything
 - rvm 2.0.0 do make release
 after_success:
