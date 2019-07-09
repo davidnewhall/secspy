@@ -12,7 +12,3 @@ The format is `os:name:arch:variant`. `os` and `name` are passed into the Docker
 yet work with an OS other than `linux`.
 
 Keep the build simple. This only supports one build tag, but it creates many more.
-
-The fancy source tag is `/^v((\d+\.\d+)(?:\.\d+)?)$/` and it allows you to capture
-the minor version without patch-level in `{\2}`. I no longer use `{\2}` in my build.
-[See how it works here](https://regex101.com/r/fzt6ki/1).

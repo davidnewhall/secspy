@@ -306,11 +306,12 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 	# Creating formula from template using sed.
 	sed -e "s/{{Version}}/$(VERSION)/g" \
 		-e "s/{{Iter}}/$(ITERATION)/g" \
-		-e "s/{{SHA256}}/`head -c64 $<`/g" \
+		-e "s/{{SHA256}}/$(shell head -c64 $<)/g" \
 		-e "s/{{Desc}}/$(DESC)/g" \
 		-e "s%{{URL}}%$(URL)%g" \
 		-e "s%{{GHREPO}}%$(GHREPO)%g" \
 		-e "s%{{CAVEATS}}%$(CAVEATS)%g" \
+		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
 		init/homebrew/$(BINARY).rb.tmpl | tee $(BINARY).rb
 
 # Extras

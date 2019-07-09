@@ -56,8 +56,8 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.licenses="${LICENSE}" \
       org.opencontainers.image.version="${VERSION}"
 
-COPY --from=builder /go/src/github.com/${GHREPO}/${BINARY}.${ARCH}.${OS} /binary
+COPY --from=builder /go/src/github.com/${GHREPO}/${BINARY}.${ARCH}.${OS} /image
 COPY --from=builder /go/src/github.com/${GHREPO}/examples/${CONFIG_FILE}.example /etc/${BINARY}/${CONFIG_FILE}
 
 VOLUME [ "/etc/${BINARY}" ]
-ENTRYPOINT [ "/binary" ]
+ENTRYPOINT [ "/image" ]
