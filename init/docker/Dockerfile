@@ -28,19 +28,25 @@ ARG OS
 ARG BUILD_DATE
 ARG COMMIT
 ARG VERSION
+ARG LICENSE=MIT
+ARG TITLE=secspy
+ARG URL=http://github.com/davidnewhall/secspy
+ARG DESC=secspy
+ARG VENDOR=golift
+ARG AUTHOR=golift
 
 # Build-time metadata as defined at https://github.com/opencontainers/image-spec/blob/master/annotations.md
 LABEL org.opencontainers.image.created="${BUILD_DATE}" \
-      org.opencontainers.image.title="Security Spy CLI" \
-      org.opencontainers.image.documentation="https://github.com/davidnewhall/secspy/wiki" \
-      org.opencontainers.image.description="Command Line Interface for Security Spy" \
-      org.opencontainers.image.url="https://github.com/davidnewhall/secspy" \
+      org.opencontainers.image.title="${TITLE}" \
+      org.opencontainers.image.documentation="${URL}/wiki/Docker" \
+      org.opencontainers.image.description="${DESC}" \
+      org.opencontainers.image.url="${URL}" \
       org.opencontainers.image.revision="${COMMIT}" \
-      org.opencontainers.image.source="https://github.com/davidnewhall/secspy" \
-      org.opencontainers.image.vendor="Go Lift" \
-      org.opencontainers.image.authors="David Newhall II <david at sleepers dot pro>" \
+      org.opencontainers.image.source="${URL}" \
+      org.opencontainers.image.vendor="${VENDOR}" \
+      org.opencontainers.image.authors="${AUTHOR}" \
       org.opencontainers.image.architecture="${OS} ${ARCH}" \
-      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.licenses="${LICENSE}" \
       org.opencontainers.image.version="${VERSION}"
 
 COPY --from=builder /go/src/github.com/davidnewhall/secspy/secspy.${ARCH}.${OS} /secspy

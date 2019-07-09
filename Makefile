@@ -1,36 +1,26 @@
 # This Makefile is written as generic as possible.
 # Setting these variables and creating the necesarry paths in your GitHub repo will make this file work.
 #
-# github username
-GHUSER=davidnewhall
-# docker hub username
-DHUSER=golift
-MAINT=David Newhall II <david at sleepers dot pro>
-DESC=Command Line Interface for SecuritySpy (IP Camera NVR)
-GOLANGCI_LINT_ARGS=--enable-all -D gochecknoglobals
-BINARY:=$(shell basename $(shell pwd))
-URL:=https://github.com/$(GHUSER)/$(BINARY)
-CONFIG_FILE=secspy.conf
 
-VERSION_PATH:=github.com/$(GHUSER)/$(BINARY)/cli.Version
+IGNORE := $(shell bash -c "source .metadata.sh ; env | sed 's/=/:=/;s/^/export /' > .metadata.make")
 
-# These don't generally need to be changed.
 
 # md2roff turns markdown into man files and html files.
 MD2ROFF_BIN=github.com/github/hub/md2roff-bin
-# This produces a 0 in some envirnoments (like Docker), but it's only used for packages.
-ITERATION:=$(shell git rev-list --count --all || echo 0)
 # Travis CI passes the version in. Local builds get it from the current git tag.
 ifeq ($(VERSION),)
-	VERSION:=$(shell git tag -l --merged | tail -n1 | tr -d v || echo development)
-endif
-ifeq ($(VERSION),)
-	VERSION:=development
+	include .metadata.make
+else
+	# Preserve the passed-in version & iteration (homebrew).
+  _VERSION:=$(VERSION)
+  _ITERATION:=$(ITERATION)
+	include .metadata.make
+	VERSION:=$(_VERSION)
+	ITERATION:=$(_ITERATION)
 endif
 # rpm is wierd and changes - to _ in versions.
 RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
-DATE:=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-COMMIT:=$(shell git rev-parse --short HEAD || echo 0)
+
 
 # Makefile targets follow.
 
@@ -78,40 +68,40 @@ README.html: md2roff
 
 build: $(BINARY)
 $(BINARY):
-	go build -o $(BINARY) -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	go build -o $(BINARY) -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 linux: $(BINARY).amd64.linux
 $(BINARY).amd64.linux:
 	# Building linux 64-bit x86 binary.
-	GOOS=linux GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=linux GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 linux386: $(BINARY).i386.linux
 $(BINARY).i386.linux:
 	# Building linux 32-bit x86 binary.
-	GOOS=linux GOARCH=386 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=linux GOARCH=386 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 arm: arm64 armhf
 
 arm64: $(BINARY).arm64.linux
 $(BINARY).arm64.linux:
 	# Building linux 64-bit ARM binary.
-	GOOS=linux GOARCH=arm64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=linux GOARCH=arm64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 armhf: $(BINARY).armhf.linux
 $(BINARY).armhf.linux:
 	# Building linux 32-bit ARM binary.
-	GOOS=linux GOARCH=arm GOARM=6 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=linux GOARCH=arm GOARM=6 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 macos: $(BINARY).amd64.macos
 $(BINARY).amd64.macos:
 	# Building darwin 64-bit x86 binary.
-	GOOS=darwin GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=darwin GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 exe: $(BINARY).amd64.exe
 windows: $(BINARY).amd64.exe
 $(BINARY).amd64.exe:
 	# Building windows 64-bit x86 binary.
-	GOOS=windows GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)"
+	GOOS=windows GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
 # Packages
 
@@ -128,7 +118,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -146,7 +136,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb: package_build_linux check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -164,7 +154,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm: package_build_linux_386 check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -182,7 +172,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb: package_build_linux_386 check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -200,7 +190,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).arm64.rpm: package_build_linux_arm64 check_
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -218,7 +208,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb: package_build_linux_arm64 check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -236,7 +226,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm: package_build_linux_armhf check_
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -254,7 +244,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf check_fpm
 		--iteration $(ITERATION) \
 		--after-install scripts/after-install.sh \
 		--before-remove scripts/before-remove.sh \
-		--license MIT \
+		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
 		--description "$(DESC)" \
@@ -266,6 +256,12 @@ docker:
 		--build-arg "BUILD_DATE=${DATE}" \
 		--build-arg "COMMIT=${COMMIT}" \
 		--build-arg "VERSION=${VERSION}-${ITERATION}" \
+		--build-arg "LICENSE=${LICENSE}" \
+		--build-arg "TITLE=${TITLE}" \
+		--build-arg "DESC=${DESC}" \
+		--build-arg "URL=${URL}" \
+		--build-arg "VENDOR=${VENDOR}" \
+		--build-arg "AUTHOR=${MAINT}" \
 		--tag $(DHUSER)/$(BINARY):local .
 
 # Build an environment that can be packaged for linux.
