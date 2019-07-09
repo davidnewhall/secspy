@@ -7,7 +7,9 @@ set -e -o pipefail
 # The Docker Cloud config must pass in the BUILDS env variable.
 # See README.md (in this dir) and the screenshot for more info.
 
-source ../../.metadata.sh
+pushd ../..
+source .metadata.sh
+popd
 
 # Build each configured image from Docker Cloud.
 for build in $BUILDS; do

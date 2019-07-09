@@ -4,7 +4,9 @@
 # It's all a bit complicated for some reason.
 set -e -o pipefail
 
-source ../../.metadata.sh
+pushd ../..
+source .metadata.sh
+popd
 
 if [ "$BUILDS" != "" ]; then
   TAGS=$DOCKER_TAG
