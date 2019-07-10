@@ -29,9 +29,10 @@ before_script:
 script:
   - make docker
   # Test built docker image.
-  - docker run $DHUSER/$BINARY:local -v 2>&1
   - docker run $DHUSER/$BINARY:local -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
   # test and build everything
+  - ls
+  - pwd
   - rvm 2.0.0 do make release
 after_success:
   # Display Release Folder
