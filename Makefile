@@ -122,6 +122,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -140,6 +141,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb: package_build_linux check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -158,6 +160,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm: package_build_linux_386 check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -176,6 +179,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb: package_build_linux_386 check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -194,6 +198,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).arm64.rpm: package_build_linux_arm64 check_
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -212,6 +217,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb: package_build_linux_arm64 check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -230,6 +236,7 @@ $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm: package_build_linux_armhf check_
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
@@ -248,6 +255,7 @@ $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf check_fpm
 		--license $(LICENSE) \
 		--url $(URL) \
 		--maintainer "$(MAINT)" \
+		--vendor "$(VENDOR)" \
 		--description "$(DESC)" \
 		--config-files "/etc/$(BINARY)/$(CONFIG_FILE)" \
 		--chdir $<
