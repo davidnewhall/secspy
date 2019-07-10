@@ -1,0 +1,28 @@
+# Homebrew Formula Template. Built by Makefile: `make fomula`
+class {{Class}} < Formula
+  desc "{{Desc}}"
+  homepage "{{URL}}"
+  url "{{URL}}/archive/v{{Version}}.tar.gz"
+  sha256 "{{SHA256}}"
+  head "{{URL}}"
+
+  depends_on "go" => :build
+  depends_on "dep"
+
+  def install
+    ENV["GOPATH"] = buildpath
+
+    bin_path = buildpath/"src/github.com/{{GHREPO}}"
+    # Copy all files from their current location (GOPATH root)
+    # to $GOPATH/src/github.com/{{GHREPO}}
+    bin_path.install Dir["*",".??*"]
+    cd bin_path do
+      system "dep", "ensure", "--vendor-only"
+      system "make", "install", "VERSION=#{version}", "ITERATION={{Iter}}", "PREFIX=#{prefix}", "ETC=#{etc}"
+    end
+  end
+
+  test do
+    assert_match "#{name} v#{version}", shell_output("#{bin}/#{name} -v 2>&1", 2)
+  end
+end
