@@ -13,8 +13,11 @@ DESC="Command Line Interface for SecuritySpy (IP Camera NVR)"
 GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals"
 CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
+# FORMULA is either 'service' or 'tool'. Services run as a daemon, tools do not.
+# This affects the homebrew formula (launchd) and linux packages (systemd).
+FORMULA="service"
 
-export BINARY GHUSER DHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE
+export BINARY GHUSER DHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE FORMULA
 
 # The rest if mostly automatic.
 

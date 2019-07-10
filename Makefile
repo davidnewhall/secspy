@@ -2,10 +2,12 @@
 # Setting the variables in .metadata.sh and creating the paths in the repo makes this work.
 #
 
+# Suck in our application information.
 IGNORE := $(shell bash -c "source .metadata.sh ; env | sed 's/=/:=/;s/^/export /' > .metadata.make")
 
 # md2roff turns markdown into man files and html files.
 MD2ROFF_BIN=github.com/github/hub/md2roff-bin
+
 # Travis CI passes the version in. Local builds get it from the current git tag.
 ifeq ($(VERSION),)
 	include .metadata.make
@@ -275,8 +277,8 @@ package_build_linux: readme man linux
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/share/doc/$(BINARY)/
-	[ ! -f init/systemd/template.unit.service ] || mkdir -p $@/lib/systemd/system
-	[ ! -f init/systemd/template.unit.service ] || \
+	[ "$FORMULA" != "service" ] || mkdir -p $@/lib/systemd/system
+	[ "$FORMULA" != "service" ] || \
 		sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{DESC}}/$(DESC)/g" \
 		init/systemd/template.unit.service > $@/lib/systemd/system/$(BINARY).service
 
@@ -315,7 +317,7 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256
 		-e "s%{{GHREPO}}%$(GHREPO)%g" \
 		-e "s%{{CONFIG_FILE}}%$(CONFIG_FILE)%g" \
 		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
-		init/homebrew/formula.rb.tmpl | tee $(BINARY).rb
+		init/homebrew/$(FORMULA).rb.tmpl | tee $(BINARY).rb
 
 # Extras
 
@@ -342,9 +344,9 @@ deps:
 install: man readme $(BINARY)
 	@echo -  Done Building!  -
 	@echo -  Local installation with the Makefile is only supported on macOS.
-	@echo If you wish to install the application manually on Linux, check out the wiki: $(URL)/wiki/Installation
+	@echo If you wish to install the application manually on Linux, check out the wiki: https://github.com/$(GHREPO)/wiki/Installation
 	@echo -  Otherwise, build and install a package: make rpm -or- make deb
-	@echo See the Package Install wiki for more info: $(URL)/wiki/Package-Install
+	@echo See the Package Install wiki for more info: https://github.com/$(GHREPO)/wiki/Package-Install
 	@[ "$(shell uname)" = "Darwin" ] || (echo "Unable to continue, not a Mac." && false)
 	@[ "$(PREFIX)" != "" ] || (echo "Unable to continue, PREFIX not set. Use: make install PREFIX=/usr/local ETC=/usr/local/etc" && false)
 	@[ "$(ETC)" != "" ] || (echo "Unable to continue, ETC not set. Use: make install PREFIX=/usr/local ETC=/usr/local/etc" && false)
