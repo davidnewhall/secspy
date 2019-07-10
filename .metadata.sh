@@ -15,7 +15,7 @@ CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
 # FORMULA is either 'service' or 'tool'. Services run as a daemon, tools do not.
 # This affects the homebrew formula (launchd) and linux packages (systemd).
-FORMULA="service"
+FORMULA="tool"
 
 export BINARY GHUSER DHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE FORMULA
 
@@ -28,7 +28,7 @@ URL="https://github.com/${GHREPO}"
 VERSION_PATH="github.com/${GHREPO}/cli.Version"
 
 # Dynamic. Recommend not changing.
-VERSION="$(git tag -l --merged | tail -n1 | tr -d v || echo development)"
+VERSION="$(git tag -l --merged | tail -n1 | tr -d v | grep -E '^\S+$' || echo development)"
 # This produces a 0 in some envirnoments (like Homebrew), but it's only used for packages.
 ITERATION=$(git rev-list --count --all || echo 0)
 DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

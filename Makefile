@@ -28,7 +28,7 @@ RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 all: build
 
 # Prepare a release. Called in Travis CI.
-release: clean vendor test macos arm windows linux_packages
+release: clean macos arm windows linux_packages
 	# Prepareing a release!
 	mkdir -p $@
 	mv $(BINARY).*.macos $(BINARY).*.linux $@/
