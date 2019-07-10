@@ -12,38 +12,40 @@ addons:
     - fakeroot
     - zip
 go:
-- 1.12.x
+  - 1.12.x
 services:
-- docker
+  - docker
 install:
-- mkdir -p $GOPATH/bin
-# Download the `dep` binary to bin folder in $GOPATH
-- curl -sLo $GOPATH/bin/dep https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64
-- chmod +x $GOPATH/bin/dep
-# download super-linter: golangci-lint
-- curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
-- rvm install 2.0.0
-- rvm 2.0.0 do gem install --no-document fpm
-- make docker
+  - mkdir -p $GOPATH/bin
+  # Download the `dep` binary to bin folder in $GOPATH
+  - curl -sLo $GOPATH/bin/dep https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64
+  - chmod +x $GOPATH/bin/dep
+  # download super-linter: golangci-lint
+  - curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
+  - rvm install 2.0.0
+  - rvm 2.0.0 do gem install --no-document fpm
+before_script:
+  - source .metadata.sh
 script:
-# Test built docker image.
-- docker run golift/secspy:local -v 2>&1 | grep -Eq "^secspy v"
-# test and build everything
-- rvm 2.0.0 do make release
+  - make docker
+  # Test built docker image.
+  - docker run $DHREPO/$BINARY:local -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
+  # test and build everything
+  - rvm 2.0.0 do make release
 after_success:
-# Display Release Folder
-- ls -l release/
-- |
-  declare -r SSH_FILE="$(mktemp -u $HOME/.ssh/XXXXX)"
-  echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-  # Get deploy key for golift/homebrew-mugs.
-  openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in ".travis/github_deploy_key.enc" -out "$SSH_FILE" -d
-  chmod 600 "$SSH_FILE" \
-    && printf "%s\n" \
-      "Host github.com" \
-      "  IdentityFile $SSH_FILE" \
-      "  StrictHostKeyChecking no" \
-      "  LogLevel ERROR" >> ~/.ssh/config
+  # Display Release Folder
+  - ls -l release/
+  - |
+    declare -r SSH_FILE="$(mktemp -u $HOME/.ssh/XXXXX)"
+    echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+    # Get deploy key for golift/homebrew-mugs.
+    openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in ".travis/github_deploy_key.enc" -out "$SSH_FILE" -d
+    chmod 600 "$SSH_FILE" \
+      && printf "%s\n" \
+        "Host github.com" \
+        "  IdentityFile $SSH_FILE" \
+        "  StrictHostKeyChecking no" \
+        "  LogLevel ERROR" >> ~/.ssh/config
 deploy:
   - provider: releases
     overwrite: true
@@ -54,13 +56,7 @@ deploy:
     file: release/*
     on:
       tags: true
-      repo: davidnewhall/secspy
   - provider: script
     script: scripts/formula-deploy.sh
     on:
       tags: true
-      repo: davidnewhall/secspy
-env:
-  global:
-  - GH_USER_NAME=secspy-auto-releaser
-  - GH_USER_EMAIL=secspy@auto.releaser
