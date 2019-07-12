@@ -21,8 +21,8 @@ if [ -f "bitly_token" ]; then
   # Request payload.
   JSON="{\"domain\": \"bit.ly\",\"title\": \"${BINARY}.v${VERSION}-${ITERATION}.tgz\", \
     \"long_url\": \"https://codeload.github.com/${GHREPO}/tar.gz/v${VERSION}\"}"
-  # Request with ehaders and data.
-  OUT=$(curl -s -X POST -H "Content-type: application/json" ${API} -H @bitly_token -d "${JSON}")
+  # Request with headers and data. Using bash -c to hide token from bash -x in travis logs.
+  OUT=$(bash -c "curl -s -X POST -H 'Content-type: application/json' ${API} -H \"\$(<bitly_token)\" -d \"${JSON}\"")
   # Extract link from reply.
   LINK="$(echo ${OUT} | jq -r .link)?v=v${VERSION}"
   # Replace link in formula.

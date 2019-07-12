@@ -27,10 +27,6 @@ install:
   - rvm install 2.0.0
   - rvm 2.0.0 do gem install --no-document fpm
 before_script:
-  - curl --version
-  - sudo apt-get update
-  - sudo apt-get install curl
-  - curl --version
   - openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in .secret_files.tar.enc -out .secret_files.tar -d
   - tar -xf .secret_files.tar
   - source .metadata.sh
