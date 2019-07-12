@@ -18,9 +18,9 @@ git clone git@github.com:${HBREPO}.git homebrew_release_repo
 # If a bitly token file exists, we'll use that to shorten the link (and allow download tracking).
 if [ -f "bitly_token" ]; then
   API=https://api-ssl.bitly.com/v4/bitlinks
-  # Request payload.
-  JSON="{\"domain\": \"bit.ly\",\"title\": \"${BINARY}.v${VERSION}-${ITERATION}.tgz\", \
-    \"long_url\": \"https://codeload.github.com/${GHREPO}/tar.gz/v${VERSION}\"}"
+  # Request payload. In single quotes with double quotes escaped. :see_no_evil:
+  JSON='{\"domain\": \"bit.ly\",\"title\": \"${BINARY}.v${VERSION}-${ITERATION}.tgz\", \
+    \"long_url\": \"https://codeload.github.com/${GHREPO}/tar.gz/v${VERSION}\"}'
   # Request with headers and data. Using bash -c to hide token from bash -x in travis logs.
   OUT=$(bash -c "curl -s -X POST -H 'Content-type: application/json' ${API} -H \"\$(<bitly_token)\" -d \"${JSON}\"")
   # Extract link from reply.
