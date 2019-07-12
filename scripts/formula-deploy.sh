@@ -19,15 +19,15 @@ git clone git@github.com:${HBREPO}.git homebrew_release_repo
 if [ -f "bitly_token" ]; then
   API=https://api-ssl.bitly.com/v4/bitlinks
   # Request payload.
-  JSON="{\"domain\": \"bit.ly\",\"title\": \"UniFi Poller v${VERSION} TGZ\", \
+  JSON="{\"domain\": \"bit.ly\",\"title\": \"${BINARY}.v${VERSION}-${ITERATION}.tgz\", \
     \"long_url\": \"https://codeload.github.com/${GHREPO}/tar.gz/v${VERSION}\"}"
   # Request with ehaders and data.
-  OUT=$(curl -s -X POST -H "Content-type: application/json" ${API} -H @bitly_token -d "${JSON}")
+  OUT=$(curl -s -X POST -H "Content-type: application/json" ${API} -H "$(<bitly_token)" -d "${JSON}")
   # Extract link from reply.
   LINK="$(echo ${OUT} | jq -r .link)?v=v${VERSION}"
   # Replace link in formula.
   sed "s#^  url.*\$#  url ${LINK}#" ${BINARY}.rb > ${BINARY}.rb.new
-  if [ "$?" = "0" ] && [ "$LINK" != "" ]; then
+  if [ "$?" = "0" ] && [ "$LINK" != "null?v=v${VERSION}" ]; then
     mv ${BINARY}.rb.new ${BINARY}.rb
   fi
 fi
