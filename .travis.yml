@@ -32,12 +32,11 @@ before_script:
   - source .metadata.sh
   - make vendor
 script:
-  - ls
   # Test Go and Docker.
   - make test
   - make docker
   # Test built docker image.
-  - docker run $DHUSER/$BINARY:local -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
+  - docker run $BINARY -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
   # build everything
   - rvm 2.0.0 do make release
 after_success:

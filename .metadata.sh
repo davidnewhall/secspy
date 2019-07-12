@@ -3,8 +3,6 @@
 BINARY="secspy"
 # github username
 GHUSER="davidnewhall"
-# docker hub username
-DHUSER="golift"
 # Github repo containing homebrew formula repo.
 HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
@@ -17,7 +15,7 @@ LICENSE="MIT"
 # This affects the homebrew formula (launchd) and linux packages (systemd).
 FORMULA="tool"
 
-export BINARY GHUSER DHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE FORMULA
+export BINARY GHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE LICENSE FORMULA
 
 # The rest if mostly automatic.
 
