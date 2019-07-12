@@ -27,6 +27,8 @@ install:
   - rvm install 2.0.0
   - rvm 2.0.0 do gem install --no-document fpm
 before_script:
+  - openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in .secret_files.tar.enc -out .secret_files.tar -d
+  - tar -xf .secret_files.tar
   - source .metadata.sh
   - make vendor
 script:
@@ -40,19 +42,17 @@ script:
 after_success:
   # Display Release Folder
   - ls -l release/
-  - openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in .bitly_token.enc -out .bitly_token -d
   - |
     mkdir -p $HOME/.ssh
     declare -r SSH_FILE="$(mktemp -u $HOME/.ssh/XXXXX)"
+    mv github_deploy_key $SSH_FILE
     echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> $HOME/.ssh/config
-    # Get deploy key for golift/homebrew-mugs.
-    openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in ".travis/github_deploy_key.enc" -out "$SSH_FILE" -d
-    chmod 600 "$SSH_FILE" \
-      && printf "%s\n" \
-        "Host github.com" \
-        "  IdentityFile $SSH_FILE" \
-        "  StrictHostKeyChecking no" \
-        "  LogLevel ERROR" >> $HOME/.ssh/config
+    chmod 600 "$SSH_FILE"
+    printf "%s\n" \
+      "Host github.com" \
+      "  IdentityFile $SSH_FILE" \
+      "  StrictHostKeyChecking no" \
+      "  LogLevel ERROR" >> $HOME/.ssh/config
 deploy:
   - provider: releases
     api_key:
