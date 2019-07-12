@@ -16,7 +16,7 @@ rm -rf homebrew_release_repo
 git clone git@github.com:${HBREPO}.git homebrew_release_repo
 
 # If a bitly token file exists, we'll use that to shorten the link (and allow download tracking).
-if [ -f bitly_token ]; then
+if [ -f "bitly_token" ]; then
   API=https://api-ssl.bitly.com/v4/bitlinks
   OUT=$(curl -s -X POST -H "Content-type: application/json" ${API} -d @bitly_token)
   LINK="$(echo ${OUT} | jq -r .link)?v=v${VERSION}"
@@ -25,6 +25,8 @@ if [ -f bitly_token ]; then
     mv ${BINARY}.rb.new ${BINARY}.rb
   fi
 fi
+ls
+pwd
 
 cp ${BINARY}.rb homebrew_release_repo/Formula
 pushd homebrew_release_repo
