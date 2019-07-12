@@ -285,8 +285,8 @@ package_build_linux: readme man linux
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/share/doc/$(BINARY)/
-	[ "$FORMULA" != "service" ] || mkdir -p $@/lib/systemd/system
-	[ "$FORMULA" != "service" ] || \
+	[ "$(FORMULA)" != "service" ] || mkdir -p $@/lib/systemd/system
+	[ "$(FORMULA)" != "service" ] || \
 		sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{DESC}}/$(DESC)/g" \
 		init/systemd/template.unit.service > $@/lib/systemd/system/$(BINARY).service
 
