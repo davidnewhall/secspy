@@ -40,6 +40,7 @@ script:
 after_success:
   # Display Release Folder
   - ls -l release/
+  - openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in .bitly_token.enc -out .bitly_token -d
   - |
     mkdir -p $HOME/.ssh
     declare -r SSH_FILE="$(mktemp -u $HOME/.ssh/XXXXX)"
