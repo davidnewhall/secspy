@@ -26,7 +26,7 @@ if [ -f "bitly_token" ]; then
   # Extract link from reply.
   LINK="$(echo ${OUT} | jq -r .link)?v=v${VERSION}"
   # Replace link in formula.
-  sed "s#^  url.*\$#  url ${LINK}#" ${BINARY}.rb > ${BINARY}.rb.new
+  sed "s#^  url.*\$#  url \"${LINK}\"#" ${BINARY}.rb > ${BINARY}.rb.new
   if [ "$?" = "0" ] && [ "$LINK" != "null?v=v${VERSION}" ]; then
     mv ${BINARY}.rb.new ${BINARY}.rb
   fi
