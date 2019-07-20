@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golift/securityspy"
 	flg "github.com/spf13/pflag"
+	"golift.io/securityspy"
 )
 
 // Version of the app
