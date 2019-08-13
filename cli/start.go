@@ -112,7 +112,11 @@ func parseFlags() *Config {
 // getServer makes, saves and returns a securitypy handle.
 func (c *Config) getServer() *securityspy.Server {
 	var err error
-	if c.Server, err = securityspy.GetServer(c.User, c.Pass, c.URL, c.UseSSL); err != nil {
+	if c.Server, err = securityspy.GetServer(&securityspy.Config{
+		Username:  c.User,
+		Password:  c.Pass,
+		URL:       c.URL,
+		VerifySSL: c.UseSSL}); err != nil {
 		fmt.Println("SecuritySpy Error:", err)
 		os.Exit(1)
 	}

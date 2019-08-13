@@ -9,6 +9,7 @@
 # If you're on redhat, this installs the latest rpm. If you're on Debian, it installs the latest deb package.
 #
 
+# Set the repo name correctly.
 REPO=davidnewhall/secspy
 LATEST=https://api.github.com/repos/${REPO}/releases/latest
 ARCH=$(uname -m)
@@ -65,7 +66,7 @@ if [ "$CMD" = "" ]; then
 fi
 
 # Grab latest release file from github.
-URL=$($CMD ${LATEST} | egrep "browser_download_url.*\.(${ARCH})\.${FILE}\"" | cut -d\" -f 4)
+URL=$($CMD ${LATEST} | egrep "browser_download_url.*(${ARCH})\.${FILE}\"" | cut -d\" -f 4)
 
 if [ "$?" != "0" ] || [ "$URL" = "" ]; then
   echo "Error locating latest release at ${LATEST}"

@@ -1,8 +1,10 @@
 SecuritySpy Command Line Interface (secspy)
 ---
 
+Works with SecuritySpy v4 and v5.
+
 This app was written as a way to test and provide example usage of the
-[securityspy](https://github.com/golift/securityspy) library.
+[securityspy](https://golift.io/securityspy) library.
 This app will be updated slowly as I feel like adding new feature.
 
 If you have feature requests or bug reports, please open an Issue.

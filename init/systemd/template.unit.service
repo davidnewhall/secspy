@@ -1,4 +1,7 @@
 # Systemd service unit for {{BINARY}}.
+# This is part of Application Builder.
+# https://github.com/golift/application-builder
+# This file is installed when FORMULA is set to 'service'.
 
 [Unit]
 Description={{BINARY}} - {{DESC}}
