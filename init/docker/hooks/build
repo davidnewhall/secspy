@@ -1,6 +1,8 @@
 #!/bin/bash
 # The Docker Cloud config must pass in the BUILDS env variable.
 # See README.md (in this dir) and the screenshot for more info.
+# This is part of Application Builder.
+# https://github.com/golift/application-builder
 
 set -e -o pipefail
 
@@ -26,7 +28,8 @@ for build in $BUILDS; do
     --build-arg "VENDOR=${VENDOR}" \
     --build-arg "AUTHOR=${MAINT}" \
     --build-arg "BINARY=${BINARY}" \
-    --build-arg "GHREPO=${GHREPO}" \
+    --build-arg "IMPORT_PATH=${IMPORT_PATH}" \
+    --build-arg "SOURCE_URL=${SOURCE_URL}" \
     --build-arg "CONFIG_FILE=${CONFIG_FILE}" \
     --tag "${IMAGE_NAME}_${os}_${name}" \
     --file ${DOCKERFILE_PATH} .

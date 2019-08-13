@@ -1,26 +1,33 @@
-# Binaries for programs and plugins
+# These are all built by the Makefile.
+# Binaries, Packages, Formula, Manual
 /secspy
+/secspy*.gz
+/secspy*.zip
+/secspy*.1
+/secspy*.deb
+/secspy*.rpm
+/secspy.*.arm
+/secspy.exe
+/secspy.*.macos
+/secspy.*.linux
 /secspy.rb
-*.exe
-*.exe~
-*.gz
 
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Vendors, Libraries.
+# Random things the Makefile creates.
+*.sha256
 /vendor
-
-# Editor junk, add your own.
-*~
+/package_build_*
+/release
+MANUAL
+MANUAL.html
 README
 README.html
-secspy_manual.html
-release
-package_build_*
-MANUAL
+/secspy_manual.html
+/homebrew_release_repo
 /.metadata.make
-*.sha256
+/.secret_files.tar
+/bitly_token
+/github_deploy_key
+
+# extra junk
+.DS_Store
+*~
