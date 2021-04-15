@@ -14,7 +14,7 @@ REPO="davidnewhall/secspy"
 HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
 DESC="Command Line Interface for SecuritySpy (IP Camera NVR)"
-GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals,forbidigo,nlreturn,exhaustivestruct,gomnd"
+GOLANGCI_LINT_ARGS="--enable-all -D forbidigo,nlreturn,exhaustivestruct"
 CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
 # FORMULA is either 'service' or 'tool'. Services run as a daemon, tools do not.
@@ -26,8 +26,7 @@ SOURCE_URL="https://github.com/${REPO}"
 # This parameter is passed in as -X to go build. Used to override the Version variable in a package.
 # This makes a path like golift.io/version.Version=1.3.3
 # Name the Version-containing library the same as the github repo, without dashes.
-#VERSION_PATH="golift.io/version"
-VERSION_PATH="github.com/${REPO}/cli"
+VERSION_PATH="golift.io/version"
 
 # Used by homebrew downloads.
 SOURCE_PATH=https://codeload.github.com/${GHUSER}/${REPO}/tar.gz/v${VERSION}

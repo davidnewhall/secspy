@@ -14,10 +14,13 @@ import (
 
 	flg "github.com/spf13/pflag"
 	"golift.io/securityspy"
+	"golift.io/version"
 )
 
-// Version of the app.
-var Version = "development"
+const (
+	mebibyte = 1024 * 1024
+	waitTime = 10 * time.Second
+)
 
 // Config represents the CLI args + securityspy.Server.
 type Config struct {
@@ -52,7 +55,7 @@ func Start() error { //nolint:cyclop
 		config.getServer()
 		fmt.Println("Watching Event Stream (all events, forever)")
 		config.Server.Events.BindFunc(securityspy.EventAllEvents, config.showEvent)
-		config.Server.Events.Watch(10*time.Second, true)
+		config.Server.Events.Watch(waitTime, true)
 	case "cameras", "cams", "cam", "c":
 		config.printCamData()
 	case "video", "vid", "v":
@@ -88,7 +91,7 @@ func (c *Config) handleEvents() error {
 	c.Server.Events.BindChan(securityspy.EventOnline, channel)
 	c.Server.Events.BindChan(securityspy.EventOffline, channel)
 
-	go c.Server.Events.Watch(10*time.Second, true)
+	go c.Server.Events.Watch(waitTime, true)
 
 	for event := range channel {
 		c.showEvent(event)
@@ -121,10 +124,10 @@ func parseFlags() *Config {
 	flg.StringVarP(&config.Arg, "arg", "a", "",
 		"if cmd supports an argument, pass it here. ie. -c pic -a Porch:/tmp/filename.jpg")
 
-	version := flg.BoolP("version", "v", false, "Print the version and exit")
+	ver := flg.BoolP("version", "v", false, "Print the version and exit")
 
-	if flg.Parse(); *version {
-		fmt.Printf("secspy v%s\n", Version)
+	if flg.Parse(); *ver {
+		fmt.Printf("secspy v%s\n", version.Version)
 		os.Exit(0) // don't run anything else.
 	}
 
@@ -245,7 +248,7 @@ func (c *Config) saveVideo() {
 	if cam == nil {
 		fmt.Println("Camera does not exist:", split[0])
 		os.Exit(1)
-	} else if err := cam.SaveVideo(&securityspy.VidOps{}, 10*time.Second, 9999999999, split[1]); err != nil {
+	} else if err := cam.SaveVideo(&securityspy.VidOps{}, waitTime, 9999999999, split[1]); err != nil {
 		fmt.Printf("Error Saving Video for camera '%v' to file '%v': %v\n", cam.Name, split[1], err)
 		os.Exit(1)
 	}
@@ -301,7 +304,7 @@ func (c *Config) showFiles() {
 		}
 
 		fmt.Printf("[%v] %v %v: '%v' (%vMB)\n",
-			file.Updated, camName, file.Link.Type, file.Title, file.Link.Length/1024/1024)
+			file.Updated, camName, file.Link.Type, file.Title, file.Link.Length/mebibyte)
 	}
 }
 
@@ -335,7 +338,7 @@ func (c *Config) downloadFile() {
 		os.Exit(1)
 	}
 
-	fmt.Println("File saved to:", savePath, "->", size/1024/1024, "MB")
+	fmt.Println("File saved to:", savePath, "->", size/mebibyte, "MiB")
 }
 
 func (c *Config) controlPTZ() {
