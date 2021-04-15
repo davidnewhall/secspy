@@ -4,16 +4,14 @@
 # This is part of Application Builder.
 # https://github.com/golift/application-builder
 
-set -e -o pipefail
-
 # This always run local to the Dockerfile folder, so the path is ../..
 pushd ../..
 
-source .metadata.sh
+source settings.sh
 
 # Build each configured image from Docker Cloud.
 for build in $BUILDS; do
-  # os:name:arch:variant
+  # os:name:arch
   os=$(echo $build | cut -d: -f1)
   name=$(echo $build | cut -d: -f2)
   echo "Building Image ${IMAGE_NAME}_${os}_${name}"
@@ -24,11 +22,9 @@ for build in $BUILDS; do
     --build-arg "VERSION=${VERSION}-${ITERATION}" \
     --build-arg "LICENSE=${LICENSE}" \
     --build-arg "DESC=${DESC}" \
-    --build-arg "URL=${URL}" \
     --build-arg "VENDOR=${VENDOR}" \
     --build-arg "AUTHOR=${MAINT}" \
     --build-arg "BINARY=${BINARY}" \
-    --build-arg "IMPORT_PATH=${IMPORT_PATH}" \
     --build-arg "SOURCE_URL=${SOURCE_URL}" \
     --build-arg "CONFIG_FILE=${CONFIG_FILE}" \
     --tag "${IMAGE_NAME}_${os}_${name}" \

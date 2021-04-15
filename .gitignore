@@ -1,33 +1,39 @@
-# These are all built by the Makefile.
-# Binaries, Packages, Formula, Manual
+# Change this line.
 /secspy
-/secspy*.gz
-/secspy*.zip
-/secspy*.1
-/secspy*.deb
-/secspy*.rpm
-/secspy.*.arm
-/secspy.exe
-/secspy.*.macos
-/secspy.*.linux
-/secspy.rb
-
-# Random things the Makefile creates.
+# The rest is probably fine.
+/rsrc*.syso
+/*.log
+/*.conf
+/*.gz
+/*.zip
+/*.upx
+/*.1
+/*.deb
+/*.rpm
+/*.txz
+/*.*.arm
+/*.*.exe
+/*.*.macos
+/*.*.linux
+/*.*.freebsd
+/*.rb
+/*.upx
+/*.app
 *.sha256
 /vendor
+.DS_Store
+*~
 /package_build_*
 /release
 MANUAL
 MANUAL.html
 README
 README.html
-/secspy_manual.html
-/homebrew_release_repo
-/.metadata.make
-/.secret_files.tar
-/bitly_token
-/github_deploy_key
-
-# extra junk
-.DS_Store
-*~
+/*_manual.html
+/homebrew-mugs
+.secret*files.tar
+github_deploy_key*
+.metadata.make
+/after-install-rendered.sh
+/before-remove-rendered.sh
+/gpg.signing.key

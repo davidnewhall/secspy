@@ -8,7 +8,7 @@ HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
 VENDOR="Go Lift"
 DESC="Command Line Interface for SecuritySpy (IP Camera NVR)"
-GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals"
+GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals,forbidigo,nlreturn,exhaustivestruct,gomnd"
 CONFIG_FILE="secspy.conf"
 LICENSE="MIT"
 # FORMULA is either 'service' or 'tool'. Services run as a daemon, tools do not.

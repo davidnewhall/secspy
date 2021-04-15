@@ -1,8 +1,21 @@
 # Powered by Application Builder: https://github.com/golift/application-builder
-language: go
+jobs:
+  include:
+  - os: osx
+    osx_image: xcode12
+    language: go
+    go: 1.16.x
+  - os: linux
+    dist: bionic
+    services: docker
+    language: go
+    go: 1.16.x
 git:
   depth: false
 addons:
+  homebrew:
+    packages:
+    - upx
   apt:
     packages:
     - ruby-dev
@@ -12,33 +25,34 @@ addons:
     - libgnome-keyring-dev
     - fakeroot
     - zip
-go:
-  - 1.12.x
-services:
-  - docker
+    - debsigs
+    - gnupg
+    - upx
 install:
-  - mkdir -p $GOPATH/bin
-  # Download the `dep` binary to bin folder in $GOPATH
-  - curl -sLo $GOPATH/bin/dep https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64
-  - chmod +x $GOPATH/bin/dep
-  # download super-linter: golangci-lint
-  - curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
-  - rvm install 2.0.0
-  - rvm 2.0.0 do gem install --no-document fpm
+  - mkdir -p $(go env GOPATH)/bin
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then rvm install 2.6.0; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then rvm 2.6.0 do gem install --no-document fpm; fi
 before_script:
   # Create your own deploy key, tar it, and encrypt the file to make this work. Optionally add a bitly_token file to the archive.
-  - openssl aes-256-cbc -K $encrypted_bff04eff92fa_key -iv $encrypted_bff04eff92fa_iv -in .secret_files.tar.enc -out .secret_files.tar -d
+  - openssl aes-256-cbc -K $encrypted_772fc4772f04_key -iv $encrypted_772fc4772f04_iv -in .secret_files.tar.enc -out .secret_files.tar -d
   - tar -xf .secret_files.tar
-  - source .metadata.sh
-  - make vendor
+  - gpg --import gpg.signing.key
+  - rm -f gpg.signing.key .secret_files.tar
+  - source settings.sh
 script:
-  # Test Go and Docker.
+  # Test Go.
   - make test
-  - make docker
+  # Test Docker.
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then make docker; fi
   # Test built docker image.
-  - docker run $BINARY -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then docker run $BINARY -v 2>&1 | grep -Eq "^$BINARY,? v.*$VERSION"; fi
   # Build everything
-  - rvm 2.0.0 do make release
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then rvm 2.6.0 do make release; fi
+  # Build mac binary or image.
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then make dmg; fi
+  # Test homebrew (with make install).
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then make install VERSION=$VERSION ITERATION=$ITERATION PREFIX=/tmp/ab-$VERSION ETC=/tmp/ab-$VERSION/etc; fi
 after_success:
   # Display Release Folder
   - ls -l release/
@@ -57,18 +71,44 @@ after_success:
         "  StrictHostKeyChecking no" \
         "  LogLevel ERROR" >> $HOME/.ssh/config)
 deploy:
+    # Stable packages (releases).
+  - provider: packagecloud
+    repository: pkgs
+    username: golift
+    token:
+      secure: ZEi3YC3RgCJS7q6ciJ65AHZyLkRDXHaC+YOBoQgJMIkQIcY5+WPaTN88fM8HlxVcLdtRwSBsVUiyb0tUoMIXAXk7xHTO4ejep+AonFBpcgN+LtqV/Pr/GzgGhIsuy25JX9/QDq/p0CZ/wcszjG8mypCr/tyia5fAl1awL7xORw+RB+NtN7ux6+cR2kRDqIguWqMuLPHe7zeAxVxje3yl231IXiu8bNms5cpMrmhwWcft6Q2LyhH2rib7Uf+lvT7SqN74yEfxbnMFgNqYjutq6c1Yed+f5d2+ExnHFSFQ0CH24LjXvHKKjS2x1MN2nH8aFhI/uqMMyYX9uPsdFXv/u6KJ31FOuB9mdc7ks7sLMPly5vnrtAWvmCyaHQKCUZZreAxxfe5lhTZIINCab9Y2xnA2jg8vBgMXtYVazlQkyF08Vd3O+0ImyXnUn9OXjVw2VIZe8IE0dK2FC5LkvVU4umPGpoJfer9y2hKS+dyeobkYbpFqi8HR8uzcHD/JTqZjhp7yELbQKurOlRa07q5rKjl7y7EmwvLwN/zvvhjYPImePm5rDoJMn58piStKFwGfte0JD6Wx/zCN2aD8h1mURqBYsYpddUKa7dVYUe0ebHnjkK1elC51gwFm2fEj5/wSG7+Jt5jsIwMuXLyKa6mzFR/XA+4nuq0csZBQKUs8qfI=
+    dist: ubuntu/focal
+    local-dir: release
+    package_glob: "*.deb"
+    cleanup: false
+    on:
+      tags: true
+      condition: "$TRAVIS_OS_NAME = linux"
+  - provider: packagecloud
+    repository: pkgs
+    username: golift
+    token:
+      secure: ZEi3YC3RgCJS7q6ciJ65AHZyLkRDXHaC+YOBoQgJMIkQIcY5+WPaTN88fM8HlxVcLdtRwSBsVUiyb0tUoMIXAXk7xHTO4ejep+AonFBpcgN+LtqV/Pr/GzgGhIsuy25JX9/QDq/p0CZ/wcszjG8mypCr/tyia5fAl1awL7xORw+RB+NtN7ux6+cR2kRDqIguWqMuLPHe7zeAxVxje3yl231IXiu8bNms5cpMrmhwWcft6Q2LyhH2rib7Uf+lvT7SqN74yEfxbnMFgNqYjutq6c1Yed+f5d2+ExnHFSFQ0CH24LjXvHKKjS2x1MN2nH8aFhI/uqMMyYX9uPsdFXv/u6KJ31FOuB9mdc7ks7sLMPly5vnrtAWvmCyaHQKCUZZreAxxfe5lhTZIINCab9Y2xnA2jg8vBgMXtYVazlQkyF08Vd3O+0ImyXnUn9OXjVw2VIZe8IE0dK2FC5LkvVU4umPGpoJfer9y2hKS+dyeobkYbpFqi8HR8uzcHD/JTqZjhp7yELbQKurOlRa07q5rKjl7y7EmwvLwN/zvvhjYPImePm5rDoJMn58piStKFwGfte0JD6Wx/zCN2aD8h1mURqBYsYpddUKa7dVYUe0ebHnjkK1elC51gwFm2fEj5/wSG7+Jt5jsIwMuXLyKa6mzFR/XA+4nuq0csZBQKUs8qfI=
+    dist: el/6
+    local-dir: release
+    package_glob: "*.rpm"
+    cleanup: false
+    on:
+      tags: true
+      condition: "$TRAVIS_OS_NAME = linux"
+  # Upload built files to github too.
   - provider: releases
-    api_key:
-      # to get a secure api key, run: travis setup releases
-      # make a copy of this file first because that command will change it.
+    token:
       secure: bYHilykJ4gTeeUij+6aNsbV4nLNZUyaNI64KtjFvB9jzFK8g3PMMPOoAsPjAPV0gkxguYkrSnQGrsk6LWJS6SdwohvHaRh55keyPfSXuBzogtUyFAT4mS1Ac5/ytXxMm/ry7Z9WbQht0nrI9RhKjtlR5LqaoWkAFidPGBYP1ThVvDqfi4azUjC77y5lS05lRZSzHTOxJm0VKeYuXYHzOV+p7q+C7vU/FGtAJctgcuWokniTE4GTrEQYviZ57LETASKhopuMT79jJqefkW2pVUKRct73NcLF8B/SGFpNT/r51XjXRLVP29JZXmimXAiVe320QYTZPQv+VnYW4gqwt26BDhjw+oa2R1PC8DKNOtgAce6Et/T/UPqQtEV3YuCTKOCPbEpMYH0RuQu3hJcNowp6OWxPkPB/yebkw4FWHN+ue3fzbLpmbnbFk+CdD+0/Ii0eypszKIMlZKHhd8XDNC+LnGH1nYA5XcMfaiLCfSfx4NqK368vN/i0oww/b9SSM9vvYz7hcc2dOa8zI1leIRPISYBWsbgKphB+Pm76VnmFAqgPSrdXn4lnxUV4/q8Nc4YHxSTXheaZCe+PX55CFkN4SyjKbCHMttTL3B8GuPndUKfrYXsufLVfkcY9O31btfHKMa87apTqXGx3VNWd/U4VDioVf1DQAlZgXrLF6hMs=
     overwrite: true
-    skip_cleanup: true
+    cleanup: false
     file_glob: true
     file: release/*
     on:
       tags: true
+  # Upload homebrew formula file to a special repo.
   - provider: script
-    script: scripts/formula-deploy.sh
+    script: bash scripts/formula-deploy.sh
     on:
       tags: true
+      condition: "$TRAVIS_OS_NAME = osx"
