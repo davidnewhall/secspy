@@ -17,7 +17,7 @@ import (
 )
 
 // Version of the app.
-var Version = "1.0.1"
+var Version = "development"
 
 // Config represents the CLI args + securityspy.Server.
 type Config struct {
