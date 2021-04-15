@@ -14,6 +14,7 @@ import (
 
 	flg "github.com/spf13/pflag"
 	"golift.io/securityspy"
+	"golift.io/securityspy/server"
 	"golift.io/version"
 )
 
@@ -42,7 +43,6 @@ var (
 // Start gets the app going.
 func Start() error { //nolint:cyclop
 	config := parseFlags()
-	securityspy.Encoder = "/usr/local/bin/ffmpeg"
 
 	switch config.Cmd {
 	// Demonstrates event channels. Events always happen in order.
@@ -52,7 +52,9 @@ func Start() error { //nolint:cyclop
 	case "callbacks", "callback", "call", "l":
 		// Demonstrates event callbacks. Sometimes they fire out of order.
 		// They happen in a go routine, so they can be blocking operations.
-		config.getServer()
+		server := config.getServer()
+		server.Encoder = "/usr/local/bin/ffmpeg"
+
 		fmt.Println("Watching Event Stream (all events, forever)")
 		config.Server.Events.BindFunc(securityspy.EventAllEvents, config.showEvent)
 		config.Server.Events.Watch(waitTime, true)
@@ -137,7 +139,7 @@ func parseFlags() *Config {
 // getServer makes, saves and returns a securitypy handle.
 func (c *Config) getServer() *securityspy.Server {
 	var err error
-	if c.Server, err = securityspy.GetServer(&securityspy.Config{
+	if c.Server, err = securityspy.New(&server.Config{
 		Username:  c.User,
 		Password:  c.Pass,
 		URL:       c.URL,
@@ -152,7 +154,7 @@ func (c *Config) getServer() *securityspy.Server {
 
 	fmt.Printf("%v %v @ %v (http://%v:%v/) %d cameras, %d scripts, %d sounds, %d schedules, %d schedule presets\n",
 		c.Server.Info.Name, c.Server.Info.Version, c.Server.Info.CurrentTime,
-		c.Server.Info.IP1, c.Server.Info.HTTPPort, len(c.Server.Cameras.Names),
+		c.Server.Info.IP1, c.Server.Info.HTTPPort, len(c.Server.Cameras.All()),
 		len(scripts), len(sounds),
 		len(c.Server.Info.ServerSchedules), len(c.Server.Info.SchedulePresets))
 
